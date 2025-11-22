@@ -1,0 +1,330 @@
+/* Girl Math Extension - Shared Popup Styles */
+/* Unified Design System - Colors and Fonts */
+
+:root {
+  --girl-math-green: #2C5F4D;
+  --girl-math-green-dark: #1f4538;
+  --girl-math-beige: #E8DDD3;
+  --girl-math-white: #ffffff;
+  --girl-math-text-primary: #2C5F4D;
+  --girl-math-text-secondary: rgba(44, 95, 77, 0.7);
+  --girl-math-border: rgba(44, 95, 77, 0.2);
+  --girl-math-border-hover: rgba(44, 95, 77, 0.3);
+  --girl-math-bg-light: rgba(44, 95, 77, 0.05);
+  
+  /* Fonts */
+  --font-serif: 'Lora', serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+}
+
+#girl-math-popup-panel {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 380px;
+  max-width: calc(100vw - 40px);
+  background: var(--girl-math-beige);
+  border-radius: 12px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+  z-index: 999999;
+  font-family: var(--font-sans);
+  animation: slideInRight 0.3s ease-out;
+  border: 1px solid var(--girl-math-border);
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(400px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.girl-math-popup-header {
+  background: var(--girl-math-green);
+  color: var(--girl-math-white);
+  padding: 16px 20px;
+  border-radius: 12px 12px 0 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.girl-math-popup-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.girl-math-popup-subtitle {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+.girl-math-popup-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: var(--girl-math-white);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  transition: background 0.2s;
+}
+
+.girl-math-popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.girl-math-popup-content {
+  padding: 20px;
+  background: var(--girl-math-beige);
+}
+
+.girl-math-cart-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.girl-math-cart-total-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--girl-math-text-primary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.girl-math-cart-total-amount {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--girl-math-text-primary);
+  font-family: var(--font-serif);
+}
+
+.girl-math-stock-info {
+  font-size: 11px;
+  color: var(--girl-math-text-primary);
+  margin-bottom: 16px;
+  opacity: 0.8;
+}
+
+.girl-math-investment-box {
+  background: #E8DDD3;
+  border: 1px solid var(--girl-math-border);
+  border-radius: 8px;
+  padding: 14px;
+  margin-bottom: 12px;
+  color: var(--girl-math-text-primary);
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.girl-math-stats {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.girl-math-stat-box {
+  flex: 1;
+  background: #E8DDD3;
+  border: 1px solid var(--girl-math-border);
+  border-radius: 6px;
+  padding: 10px;
+  text-align: center;
+}
+
+.girl-math-stat-label {
+  font-size: 10px;
+  color: var(--girl-math-text-primary);
+  opacity: 0.7;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.girl-math-stat-value {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--girl-math-text-primary);
+  font-family: var(--font-serif);
+}
+
+.girl-math-message {
+  font-size: 12px;
+  color: var(--girl-math-text-primary);
+  font-style: italic;
+  text-align: center;
+  opacity: 0.9;
+}
+
+/* Onboarding styles */
+.girl-math-onboarding-step {
+  display: none;
+}
+
+.girl-math-onboarding-step.active {
+  display: block;
+}
+
+.girl-math-onboarding-title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  color: var(--girl-math-text-primary);
+  margin-bottom: 8px;
+}
+
+.girl-math-onboarding-subtitle {
+  font-size: 13px;
+  color: var(--girl-math-text-primary);
+  opacity: 0.7;
+  margin-bottom: 20px;
+}
+
+.girl-math-option-button {
+  width: 100%;
+  padding: 14px;
+  margin-bottom: 10px;
+  background: var(--girl-math-white);
+  border: 2px solid var(--girl-math-border);
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  font-size: 14px;
+  color: var(--girl-math-text-primary);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.girl-math-option-button:hover {
+  border-color: var(--girl-math-green);
+  background: var(--girl-math-bg-light);
+}
+
+.girl-math-option-button.selected {
+  background: var(--girl-math-green);
+  color: var(--girl-math-white);
+  border-color: var(--girl-math-green);
+}
+
+.girl-math-option-emoji {
+  font-size: 20px;
+}
+
+.girl-math-onboarding-input {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid var(--girl-math-border);
+  border-radius: 8px;
+  font-size: 14px;
+  color: var(--girl-math-text-primary);
+  background: var(--girl-math-white);
+  margin-top: 12px;
+}
+
+.girl-math-onboarding-input:focus {
+  outline: none;
+  border-color: var(--girl-math-green);
+}
+
+.girl-math-onboarding-nav {
+  display: flex;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.girl-math-nav-button {
+  flex: 1;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.girl-math-nav-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.girl-math-nav-button-primary {
+  background: var(--girl-math-green);
+  color: var(--girl-math-white);
+}
+
+.girl-math-nav-button-primary:not(:disabled):hover {
+  background: var(--girl-math-green-dark);
+}
+
+.girl-math-nav-button-secondary {
+  background: var(--girl-math-white);
+  color: var(--girl-math-text-primary);
+  border: 2px solid var(--girl-math-border);
+}
+
+.girl-math-nav-button-secondary:hover {
+  border-color: var(--girl-math-green);
+}
+
+.girl-math-progress {
+  height: 4px;
+  background: var(--girl-math-border);
+  border-radius: 2px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.girl-math-progress-bar {
+  height: 100%;
+  background: var(--girl-math-green);
+  transition: width 0.3s;
+}
+
+/* Investment popup specific styles */
+.girl-math-investment-info {
+  cursor: default;
+  pointer-events: none;
+}
+
+.girl-math-investment-message {
+  margin-top: 20px;
+  padding: 14px;
+  background: var(--girl-math-bg-light);
+  border-radius: 8px;
+  border: 1px solid var(--girl-math-border);
+}
+
+.girl-math-investment-message p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--girl-math-text-primary);
+  text-align: center;
+  font-style: italic;
+  line-height: 1.5;
+  font-family: var(--font-sans);
+}
+
+@media (max-width: 480px) {
+  #girl-math-popup-panel {
+    width: calc(100vw - 20px);
+    right: 10px;
+    top: 10px;
+  }
+}
+

@@ -84,11 +84,11 @@ const Popup: React.FC = () => {
 
   if (showCompletionScreen) {
     return (
-      <div className="min-h-[500px] bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
-        <div className="w-full max-w-lg bg-white rounded-2xl p-8 shadow-lg text-center animate-fade-in">
+      <div className="min-h-[500px] bg-primary-50 flex items-center justify-center p-4">
+        <div className="w-full max-w-lg bg-primary-50 rounded-xl p-8 text-center animate-fade-in">
           <div className="text-6xl mb-4">✨</div>
-          <h1 className="text-3xl font-serif mb-4">Setup Complete!</h1>
-          <p className="text-gray-600">
+          <h1 className="text-3xl font-serif mb-4 text-primary-600">Setup Complete!</h1>
+          <p className="text-primary-600 opacity-70">
             Your profile has been saved. You're all set to start using the extension!
           </p>
         </div>
@@ -102,25 +102,25 @@ const Popup: React.FC = () => {
     const focus = getFocusLabel(data.focus);
 
     return (
-      <div className="min-h-[500px] bg-gradient-to-br from-primary-50 to-primary-100 p-4">
+      <div className="min-h-[500px] bg-primary-50 p-4">
         <div className="max-w-lg mx-auto">
           {/* Header */}
           <div className="mb-6">
-            <h1 className="text-3xl font-serif text-gray-900 mb-2">Your Profile</h1>
-            <p className="text-gray-600">Here's your personalized financial profile</p>
+            <h1 className="text-3xl font-serif text-primary-600 mb-2">Your Profile</h1>
+            <p className="text-primary-600 opacity-70">Here's your personalized financial profile</p>
           </div>
 
           {/* Dashboard Cards */}
           <div className="space-y-4">
             {/* Risk Profile Card */}
             {riskProfile && (
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-white rounded-lg p-4 border-2 border-primary-500/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{riskProfile.emoji}</span>
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Investment Approach</p>
-                      <p className="text-lg font-semibold text-gray-900">{riskProfile.label}</p>
+                      <p className="text-xs text-primary-600 opacity-70 mb-1 uppercase tracking-wide">Investment Approach</p>
+                      <p className="text-base font-semibold text-primary-600">{riskProfile.label}</p>
                     </div>
                   </div>
                 </div>
@@ -129,14 +129,14 @@ const Popup: React.FC = () => {
 
             {/* Timeline Card */}
             {timeline && (
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-white rounded-lg p-4 border-2 border-primary-500/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{timeline.emoji}</span>
                     <div>
-                      <p className="text-sm text-gray-500 mb-1">Time Horizon</p>
-                      <p className="text-lg font-semibold text-gray-900">{timeline.label}</p>
-                      <p className="text-sm text-gray-500">{timeline.sublabel}</p>
+                      <p className="text-xs text-primary-600 opacity-70 mb-1 uppercase tracking-wide">Time Horizon</p>
+                      <p className="text-base font-semibold text-primary-600">{timeline.label}</p>
+                      <p className="text-xs text-primary-600 opacity-70">{timeline.sublabel}</p>
                     </div>
                   </div>
                 </div>
@@ -145,13 +145,13 @@ const Popup: React.FC = () => {
 
             {/* Focus/Goal Card */}
             {focus && (
-              <div className="bg-white rounded-xl p-6 shadow-md">
+              <div className="bg-white rounded-lg p-4 border-2 border-primary-500/20">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl">{focus.emoji}</span>
                     <div className="flex-1">
-                      <p className="text-sm text-gray-500 mb-1">Main Goal</p>
-                      <p className="text-lg font-semibold text-gray-900">{focus.label}</p>
+                      <p className="text-xs text-primary-600 opacity-70 mb-1 uppercase tracking-wide">Main Goal</p>
+                      <p className="text-base font-semibold text-primary-600">{focus.label}</p>
                       {data.focus === "goal" && data.specificGoal && (
                         <p className="text-sm text-primary-600 mt-2 font-medium">
                           "{data.specificGoal}"
@@ -180,7 +180,7 @@ const Popup: React.FC = () => {
                   });
                 });
               }}
-              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium py-3 px-6 rounded-lg transition-colors duration-200"
+              className="w-full bg-white hover:bg-primary-50 text-primary-600 font-medium py-3 px-6 rounded-lg border-2 border-primary-500/20 hover:border-primary-500 transition-colors duration-200"
             >
               Edit Preferences
             </button>
@@ -191,16 +191,16 @@ const Popup: React.FC = () => {
   }
 
   return (
-    <div className="min-h-[500px] bg-gradient-to-br from-primary-50 to-primary-100 flex items-center justify-center p-4">
+    <div className="min-h-[500px] bg-primary-50 flex items-center justify-center p-4">
       <div className="w-full max-w-lg">
         {/* Progress */}
         <div className="mb-8 animate-fade-in">
           <div className="flex justify-between items-center mb-3">
-            <span className="text-sm font-medium text-gray-600">
+            <span className="text-sm font-medium text-primary-600 opacity-70">
               Step {step} of 3
             </span>
           </div>
-          <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+          <div className="h-1 bg-primary-500/10 rounded-full overflow-hidden">
             <div
               className="h-full bg-primary-600 transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
@@ -209,14 +209,14 @@ const Popup: React.FC = () => {
         </div>
 
         {/* Card */}
-        <div className="bg-white rounded-2xl p-8 shadow-lg animate-fade-in">
+        <div className="bg-primary-50 rounded-xl p-8 animate-fade-in">
           {step === 1 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h1 className="text-3xl font-serif text-gray-900">
+                <h1 className="text-3xl font-serif text-primary-600">
                   What's your investment approach?
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-primary-600 opacity-70">
                   This helps us personalize your perspective
                 </p>
               </div>
@@ -229,13 +229,13 @@ const Popup: React.FC = () => {
                   <button
                     key={option.value}
                     onClick={() => setData({ ...data, riskProfile: option.value as RiskProfile })}
-                    className={`w-full h-16 text-lg justify-start px-4 rounded-lg transition-all duration-200 flex items-center ${
+                    className={`w-full py-3.5 px-4 text-base justify-start rounded-lg transition-all duration-200 flex items-center gap-2.5 ${
                       data.riskProfile === option.value
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'bg-gray-50 text-gray-900 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-primary-600 text-white border-2 border-primary-600'
+                        : 'bg-white text-primary-600 hover:bg-primary-50 border-2 border-primary-500/20 hover:border-primary-600'
                     }`}
                   >
-                    <span className="mr-3 text-2xl">{option.emoji}</span>
+                    <span className="text-xl">{option.emoji}</span>
                     {option.label}
                   </button>
                 ))}
@@ -246,10 +246,10 @@ const Popup: React.FC = () => {
           {step === 2 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h1 className="text-3xl font-serif text-gray-900">
+                <h1 className="text-3xl font-serif text-primary-600">
                   What's your time horizon?
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-primary-600 opacity-70">
                   When are you planning to use this money?
                 </p>
               </div>
@@ -262,17 +262,17 @@ const Popup: React.FC = () => {
                   <button
                     key={option.value}
                     onClick={() => setData({ ...data, timeline: option.value as Timeline })}
-                    className={`w-full h-16 text-lg justify-start px-4 rounded-lg transition-all duration-200 flex items-center ${
+                    className={`w-full py-3.5 px-4 text-base justify-start rounded-lg transition-all duration-200 flex items-center gap-2.5 ${
                       data.timeline === option.value
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'bg-gray-50 text-gray-900 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-primary-600 text-white border-2 border-primary-600'
+                        : 'bg-white text-primary-600 hover:bg-primary-50 border-2 border-primary-500/20 hover:border-primary-600'
                     }`}
                   >
-                    <div className="flex items-center w-full">
-                      <span className="mr-3 text-2xl">{option.emoji}</span>
+                    <div className="flex items-center w-full gap-2.5">
+                      <span className="text-xl">{option.emoji}</span>
                       <div className="text-left flex-1">
                         <div className="font-medium">{option.label}</div>
-                        <div className={`text-sm ${data.timeline === option.value ? 'text-primary-100' : 'text-gray-500'}`}>
+                        <div className={`text-sm ${data.timeline === option.value ? 'text-white/90' : 'text-primary-600 opacity-70'}`}>
                           {option.sublabel}
                         </div>
                       </div>
@@ -286,10 +286,10 @@ const Popup: React.FC = () => {
           {step === 3 && (
             <div className="space-y-6">
               <div className="space-y-2">
-                <h1 className="text-3xl font-serif text-gray-900">
+                <h1 className="text-3xl font-serif text-primary-600">
                   What's your main goal?
                 </h1>
-                <p className="text-gray-600">
+                <p className="text-primary-600 opacity-70">
                   We'll tailor your perspective
                 </p>
               </div>
@@ -303,13 +303,13 @@ const Popup: React.FC = () => {
                   <button
                     key={option.value}
                     onClick={() => setData({ ...data, focus: option.value as Focus })}
-                    className={`w-full h-16 text-lg justify-start px-4 rounded-lg transition-all duration-200 flex items-center ${
+                    className={`w-full py-3.5 px-4 text-base justify-start rounded-lg transition-all duration-200 flex items-center gap-2.5 ${
                       data.focus === option.value
-                        ? 'bg-primary-600 text-white shadow-md'
-                        : 'bg-gray-50 text-gray-900 hover:bg-gray-100 border border-gray-200'
+                        ? 'bg-primary-600 text-white border-2 border-primary-600'
+                        : 'bg-white text-primary-600 hover:bg-primary-50 border-2 border-primary-500/20 hover:border-primary-600'
                     }`}
                   >
-                    <span className="mr-3 text-2xl">{option.emoji}</span>
+                    <span className="text-xl">{option.emoji}</span>
                     {option.label}
                   </button>
                 ))}
@@ -321,7 +321,7 @@ const Popup: React.FC = () => {
                     placeholder="e.g., Trip to Korea"
                     value={data.specificGoal}
                     onChange={(e) => setData({ ...data, specificGoal: e.target.value })}
-                    className="w-full h-12 text-lg px-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    className="w-full py-3 px-4 text-base rounded-lg border-2 border-primary-500/20 focus:outline-none focus:border-primary-600 bg-white text-primary-600"
                   />
                 </div>
               )}
@@ -333,17 +333,17 @@ const Popup: React.FC = () => {
             {step > 1 && (
               <button
                 onClick={() => setStep(step - 1)}
-                className="flex items-center justify-center px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors duration-200"
+                className="flex items-center justify-center px-4 py-3 bg-white hover:bg-primary-50 text-primary-600 font-medium rounded-lg border-2 border-primary-500/20 hover:border-primary-600 transition-colors duration-200"
               >
                 <ChevronLeft className="h-4 w-4 mr-1" />
                 Back
               </button>
             )}
             <button
-              className={`flex-1 h-12 text-lg font-semibold rounded-lg transition-all duration-200 ${
+              className={`flex-1 h-12 text-base font-semibold rounded-lg transition-all duration-200 ${
                 canProceed()
                   ? 'bg-primary-600 hover:bg-primary-700 text-white shadow-md hover:shadow-lg'
-                  : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                  : 'bg-primary-500/20 text-primary-600/50 cursor-not-allowed'
               }`}
               disabled={!canProceed()}
               onClick={() => {
