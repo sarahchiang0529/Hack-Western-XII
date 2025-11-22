@@ -5,7 +5,21 @@
 // Storage data structure
 export interface StorageData {
   count?: number;
+  girlMathProfile?: OnboardingData;
+  onboardingComplete?: boolean;
   // Add more storage fields as needed
+}
+
+// Onboarding types
+export type RiskProfile = "safe" | "balanced" | "mainCharacter";
+export type Timeline = "short" | "mid" | "long";
+export type Focus = "impulse" | "confidence" | "future" | "goal";
+
+export interface OnboardingData {
+  riskProfile: RiskProfile | null;
+  timeline: Timeline | null;
+  focus: Focus | null;
+  specificGoal: string;
 }
 
 // Message types for communication between different parts of the extension
