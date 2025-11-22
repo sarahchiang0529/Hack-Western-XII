@@ -1,12 +1,13 @@
 """
 FastAPI Application Entry Point
 """
+from backend.app.api.routes import stock
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.middleware import setup_middleware
-from app.api.routes import health, items
+from app.api.routes import health
 
 
 # Create FastAPI application
@@ -24,7 +25,7 @@ setup_middleware(app)
 
 # Include routers
 app.include_router(health.router)
-app.include_router(items.router, prefix=settings.API_V1_PREFIX)
+app.include_router(stock.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/", tags=["Root"])
