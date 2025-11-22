@@ -35,27 +35,40 @@ class GirlMathRequest(BaseModel):
     """ Model for the data coming into the API to start the calculation """
     ticker: str = Field(..., description="The stock ticker symbol associated with the item")
     item_price: float = Field(..., ge=0.01, description="The cost of the item")
+    years_ago: int = Field(default=2, ge=1, le=10, description="How many years ago you would have bought instead of purchasing the item (1-10)")
 
 class GirlMathResponse(BaseModel):
-    """the final data model for the API response after calculation """
+    """The final data model showing what your investment would be worth if you had invested X years ago"""
     ticker: str
     item_price: float
-    current_stock_price: float
-    shares_to_buy: float = Field(..., description="The fraction of a share purchased with the item price")
-    years_until_free: float = Field(..., description="The calculated years for the investment to double")
-    growth_assumption_percentage: float = Field(default=8.0, description="The annual growth rate assumed for the calculation")
+    years_ago: int = Field(..., description="Years ago the hypothetical investment was made")
+    historical_stock_price: float = Field(..., description="Stock price X years ago")
+    current_stock_price: float = Field(..., description="Current stock price")
+    shares_bought: float = Field(..., description="Number of shares that could have been bought")
+    current_value: float = Field(..., description="Current value of the investment")
+    profit_loss: float = Field(..., description="Profit or loss amount")
+    percent_gain: float = Field(..., description="Percentage gain/loss")
+    is_free: bool = Field(..., description="True if investment has doubled (item is 'free')")
+    years_until_free: Optional[float] = Field(None, description="Years until investment doubles from now (if not free yet)")
+    growth_rate_percentage: float = Field(..., description="Historical annual growth rate used (as percentage)")
     timestamp: datetime
 
     class Config:
         json_schema_extra = {
             "example": {
-                "ticker": "DECK",
+                "ticker": "AAPL",
                 "item_price": 150.00,
-                "current_stock_price": 900.00,
-                "shares_to_buy": 0.1667,
-                "years_until_free": 9.0,
-                "growth_assumption_percentage": 8.0,
-                "timestamp": "2025-11-22T17:55:00"
+                "years_ago": 2,
+                "historical_stock_price": 130.00,
+                "current_stock_price": 189.50,
+                "shares_bought": 1.1538,
+                "current_value": 218.65,
+                "profit_loss": 68.65,
+                "percent_gain": 45.77,
+                "is_free": False,
+                "years_until_free": 8.2,
+                "growth_rate_percentage": 10.5,
+                "timestamp": "2025-11-22T19:00:00"
             }
         }
 
