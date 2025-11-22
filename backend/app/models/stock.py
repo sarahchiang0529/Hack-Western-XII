@@ -7,15 +7,13 @@ from datetime import datetime
 
 """ Model for Stock Data """
 
-"""
 class StockQuote(BaseModel):
-    "Data model for the raw date fetch from yfinance "
+    """Data model for the raw date fetch from yfinance"""
     ticker: str = Field(..., min_length=1, max_length=100, description="The stock ticker symbol")
     price: float = Field(..., ge=0, description="Current market price per share")
     company_name: str = Field(..., min_length=1, max_length=100, description="The name of the company")
     sector: str = Field("Unknown", description="The industry sector of the company")
     sustainability_score: Optional[str] = Field("N/A", description="Total ESG score")
-"""
 
 """
 class StockQuoteCreate(BaseModel):

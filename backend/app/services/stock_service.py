@@ -8,7 +8,7 @@ import uuid
 import math
 import yfinance as yf
 
-from backend.app.models.stock import GirlMathResponse, StockQuote
+from app.models.stock import GirlMathResponse, StockQuote
 
 
 class StockService:

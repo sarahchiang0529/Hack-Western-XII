@@ -1,13 +1,12 @@
 """
 FastAPI Application Entry Point
 """
-from backend.app.api.routes import stock
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.middleware import setup_middleware
-from app.api.routes import health
+from app.api.routes import health, stock
 
 
 # Create FastAPI application
