@@ -25,12 +25,11 @@ def get_stock_service() -> StockService:
     description="Fetches the current stock price and company information for a given ticker symbol."
 )
 async def get_stock_price(
-    ticker: str = Path(..., description="Stock ticker symbol (e.g., AAPL, MSFT)", min_length=1, max_length=10),
+    ticker: str = Path(..., description="Stock ticker symbol", min_length=1, max_length=10),
     service: Annotated[StockService, Depends(get_stock_service)] = None
 ):
     """
     Get real-time stock price and metadata for a ticker.
-    
     Example: GET /api/stock/price/AAPL
     """
     result = service.get_real_time_price(ticker)
