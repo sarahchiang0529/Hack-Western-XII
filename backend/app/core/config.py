@@ -29,9 +29,14 @@ class Settings(BaseSettings):
     # Development Settings
     RELOAD: bool = True
     
+    # Gemini AI Settings
+    GEMINI_API_KEY: str = ""
+    GEN_MODEL: str = ""
+    
     class Config:
         env_file = ".env"
         case_sensitive = True
+        extra = "allow"  # Allow extra fields from .env
 
 
 # Create settings instance

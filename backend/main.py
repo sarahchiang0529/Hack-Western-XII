@@ -6,7 +6,7 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.middleware import setup_middleware
-from app.api.routes import health, items
+from app.api.routes import health, items, chat
 
 
 # Create FastAPI application
@@ -25,6 +25,7 @@ setup_middleware(app)
 # Include routers
 app.include_router(health.router)
 app.include_router(items.router, prefix=settings.API_V1_PREFIX)
+app.include_router(chat.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/", tags=["Root"])
