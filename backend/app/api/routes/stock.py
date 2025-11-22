@@ -4,7 +4,7 @@ Stock API Routes
 from fastapi import APIRouter, HTTPException, Depends, Path, Query
 from typing import List, Annotated
 from app.services.stock_service import stock_service, StockService, StockQuote
-from app.models.stock import GirlMathRequest, GirlMathResponse
+from app.models.stock import GirlMathRequest, GirlMathResponse, GirlMathRecommendationRequest, GirlMathRecommendationResponse
 
 # Create router
 router = APIRouter(
@@ -75,7 +75,7 @@ async def calculate_girl_math(
     - Historical growth rate used for projections
     
     The years_ago parameter (optional, default: 2) lets you see what would have
-    happened if you invested 1-10 years ago instead of making the purchase.
+    happened if you invested 1-30 years ago instead of making the purchase.
     """
     # Call the service method with years_ago parameter
     result = service.calculate_girl_math(
@@ -89,6 +89,62 @@ async def calculate_girl_math(
         raise HTTPException(
             status_code=400,
             detail=f"Could not fetch data for ticker '{request.ticker}'. Please check the ticker symbol and try again or ensure there is sufficient historical data."
+        )
+    
+    return result
+
+
+@router.post(
+    "/calculate-with-recommendations",
+    response_model=GirlMathRecommendationResponse,
+    summary="Calculate 'What If I Invested Instead' with Personalized Recommendations",
+    description="Shows what your investment would be worth TODAY if you had invested in a randomly selected stock from your chosen approach (conservative/balanced/aggressive) X years ago. Returns a personalized message based on your financial goals and risk tolerance."
+)
+async def calculate_girl_math_with_recommendations(
+    request: GirlMathRecommendationRequest,
+    service: Annotated[StockService, Depends(get_stock_service)] = None
+):
+    """
+    Run the Girl Math calculation with personalized stock recommendations.
+    
+    Example request body:
+    {
+        "item_price": 150.00,
+        "years_ago": 2,
+        "approach": "balanced",
+        "goal": "travel",
+        "horizon": "medium",
+        "shopping_site": "Amazon",
+        "cart_total": 150.00
+    }
+    
+    The endpoint will:
+    - Randomly select a stock from the approach category
+      * Conservative: VTI, VOO, BND (index funds, bonds)
+      * Balanced: VT, XEQT, AAPL (diversified)
+      * Aggressive: QQQ, NVDA, TSLA (high growth)
+    - Calculate historical performance
+    - Generate a personalized message based on approach + goal
+    
+    Response includes all calculation details plus a custom "girl math" blurb
+    tailored to your investment style and financial goals.
+    """
+    # Call the service method
+    result = service.calculate_girl_math_with_recommendation(
+        item_price=request.item_price,
+        years_ago=request.years_ago,
+        approach=request.approach,
+        goal=request.goal,
+        horizon=request.horizon,
+        shopping_site=request.shopping_site,
+        cart_total=request.cart_total
+    )
+    
+    # Handle failure - invalid approach or API error
+    if result is None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Could not calculate recommendation for approach '{request.approach}'. Please check your inputs and try again."
         )
     
     return result

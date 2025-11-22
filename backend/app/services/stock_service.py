@@ -6,9 +6,17 @@ from typing import Dict, List, Optional
 from datetime import datetime
 import uuid
 import math
+import random
 import yfinance as yf
 
-from app.models.stock import GirlMathResponse, StockQuote
+from app.models.stock import GirlMathResponse, GirlMathRecommendationResponse, StockQuote
+
+# Hardcoded stock lists for different investment approaches
+APPROACH_STOCKS = {
+    "conservative": ["VTI", "VOO", "BND"],
+    "balanced": ["VT", "XEQT", "AAPL"],
+    "aggressive": ["QQQ", "NVDA", "TSLA"]
+}
 
 
 class StockService:
@@ -98,6 +106,75 @@ class StockService:
         except Exception as e:
             print(f"[GROWTH] Error calculating growth for {ticker}: {type(e).__name__} - {e}, using default")
             return DEFAULT_RATE
+    
+    def _generate_blurb(
+        self,
+        approach: str,
+        goal: str,
+        horizon: str,
+        shopping_site: str,
+        cart_total: float,
+        ticker: str,
+        past_value: float,
+        today_value: float,
+        percent_gain: float,
+        period_years: int
+    ) -> str:
+        """
+        Generate personalized blurb based on approach and goal combination
+        
+        Args:
+            approach: Investment approach (conservative, balanced, aggressive)
+            goal: Financial goal (emergency, travel, future_home, long_term_wealth, other)
+            horizon: Time horizon (short, medium, long)
+            shopping_site: Shopping website name
+            cart_total: Cart total amount
+            ticker: Stock ticker symbol
+            past_value: Historical stock price
+            today_value: Current stock price
+            percent_gain: Percentage gain
+            period_years: Number of years in the analysis
+            
+        Returns:
+            Personalized blurb string
+        """
+        # Format monetary values
+        cart_str = f"${cart_total:.2f}"
+        past_str = f"${past_value:.2f}"
+        today_str = f"${today_value:.2f}"
+        gain_str = f"+{percent_gain:.1f}%" if percent_gain > 0 else f"{percent_gain:.1f}%"
+        
+        # Base template
+        base = f"Girl math but make it finance: your {cart_str} at {shopping_site} could've been a {ticker} moment — {period_years} years ago it was {past_str}, and today it'd be {today_str} ({gain_str} gain)"
+        
+        # Approach + Goal specific endings
+        blurb_endings = {
+            ("conservative", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this shows how steady growth builds your safety net — but remember, past returns aren't guaranteed.",
+            ("conservative", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if showing how patience pays… but actual vacations need cash, not just stocks!",
+            ("conservative", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this steady approach could've helped with that down payment — slow and steady wins the real estate race.",
+            ("conservative", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it shows how playing it safe can still build wealth over time — boring but effective!",
+            ("conservative", "other"): f". For your {approach} vibe and {horizon} horizon, it's a gentle reminder that stability and growth can coexist — just at a chill pace.",
+            
+            ("balanced", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if showing balanced growth for security — but keep some cash handy too!",
+            ("balanced", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if… instead of buying from {shopping_site} today, you could've been planning that dream trip with these returns.",
+            ("balanced", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this balanced approach could've gotten you closer to those house keys — not too risky, not too slow.",
+            ("balanced", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it shows the sweet spot between safety and growth — perfect for building wealth without the stress.",
+            ("balanced", "other"): f". For your {approach} vibe and {horizon} horizon, it's the Goldilocks of investing — not too safe, not too risky, just right for steady gains.",
+            
+            ("aggressive", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this shows the power of bold moves — but emergency funds need stability, not volatility!",
+            ("aggressive", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, those gains could've been first-class tickets — high risk, high reward, high adventure!",
+            ("aggressive", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, these bold gains could've been your down payment — but the ride might've been bumpy!",
+            ("aggressive", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's about maximizing gains and accepting the rollercoaster — fortune favors the bold!",
+            ("aggressive", "other"): f". For your {approach} vibe and {horizon} horizon, you're playing for big wins — just remember, what goes up fast can come down faster.",
+        }
+        
+        # Get the appropriate ending, fallback to generic if combination not found
+        ending = blurb_endings.get(
+            (approach.lower(), goal.lower()),
+            f". For your {approach} vibe and {horizon} horizon toward {goal}, it's an interesting what-if moment!"
+        )
+        
+        return base + ending
     
     def get_real_time_price(self, ticker: str) -> Optional[StockQuote]:
         """
@@ -290,6 +367,106 @@ class StockService:
         except Exception as e:
             print(f"[GIRL MATH] Error calculating for {ticker}: {type(e).__name__} - {e}")
             return None
+    
+    def calculate_girl_math_with_recommendation(
+        self,
+        item_price: float,
+        years_ago: int,
+        approach: str,
+        goal: str,
+        horizon: str,
+        shopping_site: str,
+        cart_total: float
+    ) -> Optional[GirlMathRecommendationResponse]:
+        """
+        Calculates girl math with a randomly selected stock from the approach category
+        and generates a personalized blurb based on approach and goal.
+        
+        Args:
+            item_price: Cost of the item
+            years_ago: How many years ago you would have invested
+            approach: Investment approach (conservative, balanced, aggressive)
+            goal: Financial goal
+            horizon: Time horizon
+            shopping_site: Shopping website name
+            cart_total: Cart total amount
+            
+        Returns:
+            GirlMathRecommendationResponse with personalized message, or None if calculation fails
+        """
+        print(f"[RECOMMENDATION] Approach: {approach}, Goal: {goal}, Amount: ${item_price}")
+        
+        # Get the stock list for this approach
+        stock_list = APPROACH_STOCKS.get(approach.lower())
+        if not stock_list:
+            print(f"[RECOMMENDATION] Invalid approach: {approach}")
+            return None
+        
+        # Randomly select a stock from the list
+        selected_ticker = random.choice(stock_list)
+        print(f"[RECOMMENDATION] Randomly selected {selected_ticker} from {approach} list: {stock_list}")
+        
+        # Calculate the girl math for this stock
+        result = self.calculate_girl_math(
+            ticker=selected_ticker,
+            item_price=item_price,
+            years_ago=years_ago
+        )
+        
+        if result is None:
+            print(f"[RECOMMENDATION] Failed to calculate for {selected_ticker}, trying another...")
+            # Try another random pick if the first one fails
+            remaining_stocks = [s for s in stock_list if s != selected_ticker]
+            if remaining_stocks:
+                selected_ticker = random.choice(remaining_stocks)
+                print(f"[RECOMMENDATION] Retry with {selected_ticker}")
+                result = self.calculate_girl_math(
+                    ticker=selected_ticker,
+                    item_price=item_price,
+                    years_ago=years_ago
+                )
+            
+            if result is None:
+                print(f"[RECOMMENDATION] All stocks failed for {approach} approach")
+                return None
+        
+        # Generate the personalized blurb
+        blurb = self._generate_blurb(
+            approach=approach,
+            goal=goal,
+            horizon=horizon,
+            shopping_site=shopping_site,
+            cart_total=cart_total,
+            ticker=result.ticker,
+            past_value=result.historical_stock_price,
+            today_value=result.current_stock_price,
+            percent_gain=result.percent_gain,
+            period_years=result.years_ago
+        )
+        
+        print(f"[RECOMMENDATION] Generated blurb for {approach}/{goal}: {blurb[:100]}...")
+        
+        # Build the recommendation response
+        return GirlMathRecommendationResponse(
+            main_blurb=blurb,
+            ticker=result.ticker,
+            item_price=result.item_price,
+            years_ago=result.years_ago,
+            historical_stock_price=result.historical_stock_price,
+            current_stock_price=result.current_stock_price,
+            shares_bought=result.shares_bought,
+            current_value=result.current_value,
+            profit_loss=result.profit_loss,
+            percent_gain=result.percent_gain,
+            is_free=result.is_free,
+            years_until_free=result.years_until_free,
+            growth_rate_percentage=result.growth_rate_percentage,
+            approach=approach,
+            goal=goal,
+            horizon=horizon,
+            shopping_site=shopping_site,
+            timestamp=result.timestamp
+        )
     
     def get_esg_stocks(self) -> List[StockQuote]:
         """
