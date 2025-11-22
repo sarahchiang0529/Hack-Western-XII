@@ -8,17 +8,30 @@ export default {
     extend: {
       colors: {
         primary: {
-          50: '#f0f9ff',
-          100: '#e0f2fe',
-          200: '#bae6fd',
-          300: '#7dd3fc',
-          400: '#38bdf8',
-          500: '#0ea5e9',
-          600: '#0284c7',
-          700: '#0369a1',
-          800: '#075985',
-          900: '#0c4a6e',
+          50: 'var(--girl-math-beige)',   // Beige background
+          100: 'var(--girl-math-beige)',
+          200: 'var(--girl-math-beige)',
+          300: 'var(--girl-math-beige)',
+          400: 'var(--girl-math-beige)',
+          500: 'var(--girl-math-green)',  // Main green
+          600: 'var(--girl-math-green)',  // Main green
+          700: 'var(--girl-math-green-dark)',  // Darker green for hover
+          800: 'var(--girl-math-green-dark)',
+          900: 'var(--girl-math-green-dark)',
         },
+        // Match shared CSS colors using CSS variables
+        'girl-math': {
+          green: 'var(--girl-math-green)',
+          'green-dark': 'var(--girl-math-green-dark)',
+          beige: 'var(--girl-math-beige)',
+          white: 'var(--girl-math-white)',
+          'text-primary': 'var(--girl-math-text-primary)',
+          'text-secondary': 'var(--girl-math-text-secondary)',
+        },
+      },
+      fontFamily: {
+        serif: ['var(--font-serif)', 'serif'],
+        sans: ['var(--font-sans)', 'sans-serif'],
       },
     },
   },
