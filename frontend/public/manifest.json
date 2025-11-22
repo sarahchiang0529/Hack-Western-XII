@@ -15,7 +15,7 @@
     {
       "matches": ["<all_urls>", "https://www.aritzia.com/en/checkout/*"],
       "js": ["content/content.js"],
-      "css": ["shared/popup-styles.css"],
+      "css": ["shared/global.css"],
       "run_at": "document_idle"
     }
   ],

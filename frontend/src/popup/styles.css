@@ -1,31 +1,22 @@
+/* Import global styles FIRST (must be before Tailwind) */
+@import '../shared/global.css';
+
+/* Tailwind CSS imports */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Popup-specific styles */
 body {
   margin: 0;
   padding: 0;
   min-width: 400px;
   min-height: 500px;
+  background: var(--girl-math-beige);
 }
 
 #root {
   width: 100%;
   height: 100%;
-}
-
-@keyframes fade-in {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.animate-fade-in {
-  animation: fade-in 0.3s ease-out;
 }
 
