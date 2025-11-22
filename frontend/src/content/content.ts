@@ -12,7 +12,11 @@ import type {
   Focus,
 } from "@/shared/types";
 
+import "@/shared/global.css";
+
+// ========================================
 // Constants
+// ========================================
 const CHECKOUT_URL_PATTERNS = [
   /\/checkout/i,
   /\/cart/i,
@@ -79,11 +83,14 @@ const ONBOARDING_STEPS = {
   },
 } as const;
 
+// ========================================
 // State
+// ========================================
 let popupPanel: HTMLElement | null = null;
 let isPanelVisible = false;
 let userDismissedPopup = false;
 let onboardingStep = 1;
+
 let onboardingData: OnboardingData = {
   riskProfile: null,
   timeline: null,
@@ -91,9 +98,11 @@ let onboardingData: OnboardingData = {
   specificGoal: "",
 };
 
+// ========================================
 // Utility Functions
+// ========================================
 function log(message: string, data?: unknown): void {
-  console.log(`[Girl Math] ${message}`, data || "");
+  console.log(`[Girl Math] ${message}`, data ?? "");
 }
 
 function isCheckoutPage(): boolean {
@@ -114,7 +123,7 @@ function isCheckoutPage(): boolean {
         return true;
       }
     } catch {
-      // Invalid selector, continue
+      // ignore invalid selector
     }
   }
 
@@ -139,7 +148,7 @@ function extractCartTotal(): number | null {
         }
       }
     } catch {
-      // Continue
+      // continue
     }
   }
 
@@ -183,7 +192,9 @@ function canProceedOnboarding(): boolean {
   return stepFields[onboardingStep - 1] !== null;
 }
 
+// ========================================
 // Popup Management
+// ========================================
 function removePopup(): void {
   if (popupPanel) {
     popupPanel.remove();
@@ -193,8 +204,8 @@ function removePopup(): void {
 }
 
 function appendPopupToBody(): void {
-  if (document.body) {
-    document.body.appendChild(popupPanel!);
+  if (document.body && popupPanel) {
+    document.body.appendChild(popupPanel);
     isPanelVisible = true;
   } else {
     setTimeout(() => {
@@ -218,7 +229,12 @@ function createPopupHeader(title: string, subtitle: string): string {
   `;
 }
 
-function createOptionButton(value: string, label: string, emoji: string, isSelected: boolean): string {
+function createOptionButton(
+  value: string,
+  label: string,
+  emoji: string,
+  isSelected: boolean,
+): string {
   return `
     <button class="girl-math-option-button ${isSelected ? "selected" : ""}" data-value="${value}">
       <span class="girl-math-option-emoji">${emoji}</span>
@@ -227,6 +243,7 @@ function createOptionButton(value: string, label: string, emoji: string, isSelec
   `;
 }
 
+// ---------- Investment popup ----------
 function createInvestmentPopup(cartTotal: number): void {
   removePopup();
 
@@ -236,18 +253,43 @@ function createInvestmentPopup(cartTotal: number): void {
 
   popupPanel = document.createElement("div");
   popupPanel.id = "girl-math-popup-panel";
+
   popupPanel.innerHTML = `
     ${createPopupHeader("Girl Math", "Investment Perspective")}
     <div class="girl-math-popup-content">
-      <h4 class="girl-math-onboarding-title">Your Cart Total</h4>
-      <p class="girl-math-onboarding-subtitle">What if you invested this instead?</p>
-      
-      ${createOptionButton("cart", `Cart Total: ${formattedTotal}`, "🛒", false).replace('class="girl-math-option-button', 'class="girl-math-option-button girl-math-investment-info')}
-      ${createOptionButton("investment", `If invested in ${investment.stock} (5 years): ${formattedFuture}`, "📈", true).replace('class="girl-math-option-button', 'class="girl-math-option-button girl-math-investment-info')}
-      ${createOptionButton("growth", `Potential Growth: +${investment.returnPercent}%`, "💰", false).replace('class="girl-math-option-button', 'class="girl-math-option-button girl-math-investment-info')}
-      
-      <div class="girl-math-investment-message">
-        <p>You don't have to buy it today. Future you is watching. ✨</p>
+      <!-- Top row: CART TOTAL + NVDA Last 5 years -->
+      <div class="girl-math-cart-total">
+        <div class="girl-math-cart-total-left">
+          <div class="girl-math-cart-total-label">CART TOTAL</div>
+          <div class="girl-math-cart-total-amount">${formattedTotal}</div>
+        </div>
+        <div class="girl-math-cart-total-meta">
+          <div class="girl-math-cart-total-meta-symbol">${investment.stock}</div>
+          <div class="girl-math-cart-total-meta-period">Last 5 years</div>
+        </div>
+      </div>
+
+      <!-- Main explanation block -->
+      <div class="girl-math-investment-box">
+        ${formattedTotal} in ${investment.stock} last 5 years would be ~${formattedFuture} today.
+        That's ${investment.returnPercent}% growth.
+      </div>
+
+      <!-- Two stat cards -->
+      <div class="girl-math-stats">
+        <div class="girl-math-stat-box">
+          <div class="girl-math-stat-label">Return</div>
+          <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
+        </div>
+        <div class="girl-math-stat-box">
+          <div class="girl-math-stat-label">Future Value</div>
+          <div class="girl-math-stat-value">${formattedFuture}</div>
+        </div>
+      </div>
+
+      <!-- Bottom message -->
+      <div class="girl-math-message">
+        You don't have to buy it today. Future you is watching.
       </div>
     </div>
   `;
@@ -256,16 +298,20 @@ function createInvestmentPopup(cartTotal: number): void {
   appendPopupToBody();
 }
 
+// ---------- Onboarding popup ----------
 function createOnboardingPopup(): void {
   removePopup();
 
   popupPanel = document.createElement("div");
   popupPanel.id = "girl-math-popup-panel";
 
-  const stepKey = onboardingStep === 1 ? "riskProfile" : onboardingStep === 2 ? "timeline" : "focus";
+  const stepKey = (
+    onboardingStep === 1 ? "riskProfile" : onboardingStep === 2 ? "timeline" : "focus"
+  ) as keyof typeof ONBOARDING_STEPS;
+
   const stepData = ONBOARDING_STEPS[stepKey];
   const progress = (onboardingStep / 3) * 100;
-  const currentValue = onboardingData[stepKey];
+  const currentValue = (onboardingData as any)[stepKey];
 
   popupPanel.innerHTML = `
     ${createPopupHeader("Complete Setup", `Step ${onboardingStep} of 3`)}
@@ -273,12 +319,16 @@ function createOnboardingPopup(): void {
       <div class="girl-math-progress">
         <div class="girl-math-progress-bar" style="width: ${progress}%"></div>
       </div>
-      
+
       <div class="girl-math-onboarding-step active">
         <h4 class="girl-math-onboarding-title">${stepData.title}</h4>
         <p class="girl-math-onboarding-subtitle">${stepData.subtitle}</p>
-        ${stepData.options.map((opt) => createOptionButton(opt.value, opt.label, opt.emoji, currentValue === opt.value)).join("")}
-        ${onboardingStep === 3 && onboardingData.focus === "goal" ? `
+        ${stepData.options
+          .map((opt) => createOptionButton(opt.value, opt.label, opt.emoji, currentValue === opt.value))
+          .join("")}
+        ${
+          onboardingStep === 3 && onboardingData.focus === "goal"
+            ? `
           <input 
             type="text" 
             class="girl-math-onboarding-input" 
@@ -286,13 +336,21 @@ function createOnboardingPopup(): void {
             value="${onboardingData.specificGoal}"
             id="girl-math-goal-input"
           />
-        ` : ""}
+        `
+            : ""
+        }
       </div>
-      
+
       <div class="girl-math-onboarding-nav">
-        ${onboardingStep > 1 ? `
-          <button class="girl-math-nav-button girl-math-nav-button-secondary" id="girl-math-back">Back</button>
-        ` : ""}
+        ${
+          onboardingStep > 1
+            ? `
+          <button class="girl-math-nav-button girl-math-nav-button-secondary" id="girl-math-back">
+            Back
+          </button>
+        `
+            : ""
+        }
         <button 
           class="girl-math-nav-button girl-math-nav-button-primary" 
           id="girl-math-next"
@@ -309,6 +367,9 @@ function createOnboardingPopup(): void {
   appendPopupToBody();
 }
 
+// ========================================
+// Event wiring helpers
+// ========================================
 function setupPopupCloseButton(): void {
   const closeBtn = popupPanel?.querySelector(".girl-math-popup-close");
   closeBtn?.addEventListener("click", dismissPopupPanel);
@@ -346,22 +407,29 @@ function setupOnboardingEventListeners(): void {
     onboardingData.specificGoal = (e.target as HTMLInputElement).value;
   });
 
-  popupPanel?.querySelector("#girl-math-back")?.addEventListener("click", () => {
-    onboardingStep = Math.max(1, onboardingStep - 1);
-    createOnboardingPopup();
-  });
-
-  popupPanel?.querySelector("#girl-math-next")?.addEventListener("click", () => {
-    if (!canProceedOnboarding()) return;
-    if (onboardingStep < 3) {
-      onboardingStep++;
+  popupPanel
+    ?.querySelector("#girl-math-back")
+    ?.addEventListener("click", () => {
+      onboardingStep = Math.max(1, onboardingStep - 1);
       createOnboardingPopup();
-    } else {
-      saveOnboardingData();
-    }
-  });
+    });
+
+  popupPanel
+    ?.querySelector("#girl-math-next")
+    ?.addEventListener("click", () => {
+      if (!canProceedOnboarding()) return;
+      if (onboardingStep < 3) {
+        onboardingStep++;
+        createOnboardingPopup();
+      } else {
+        saveOnboardingData();
+      }
+    });
 }
 
+// ========================================
+// Show / hide
+// ========================================
 function hidePopupPanel(): void {
   if (popupPanel) {
     popupPanel.style.animation = "slideInRight 0.3s ease-out reverse";
@@ -380,9 +448,17 @@ function resetDismissalFlag(): void {
   userDismissedPopup = false;
 }
 
+// ========================================
+// Main logic: should we show anything?
+// ========================================
 async function checkAndShowPanel(): Promise<void> {
   const isCheckout = isCheckoutPage();
-  log("Checking page", { url: window.location.href, isCheckout, isPanelVisible, userDismissedPopup });
+  log("Checking page", {
+    url: window.location.href,
+    isCheckout,
+    isPanelVisible,
+    userDismissedPopup,
+  });
 
   if (!isCheckout) {
     if (isPanelVisible) hidePopupPanel();
@@ -396,7 +472,7 @@ async function checkAndShowPanel(): Promise<void> {
   }
 
   const profile = await getUserProfile();
-  const isOnboardingComplete = profile?.riskProfile && profile?.timeline && profile?.focus;
+  const isOnboardingComplete = !!(profile?.riskProfile && profile?.timeline && profile?.focus);
 
   log("Profile check", { hasProfile: !!profile, isOnboardingComplete });
 
@@ -412,14 +488,20 @@ async function checkAndShowPanel(): Promise<void> {
   }
 }
 
+// ========================================
 // Message Handler
+// ========================================
 chrome.runtime.onMessage.addListener(
   (message: Message, _sender, sendResponse: (response: MessageResponse) => void) => {
     switch (message.type) {
       case "GET_DATA":
         sendResponse({
           success: true,
-          data: { title: document.title, url: window.location.href, isCheckout: isCheckoutPage() },
+          data: {
+            title: document.title,
+            url: window.location.href,
+            isCheckout: isCheckoutPage(),
+          },
         });
         break;
       default:
@@ -429,7 +511,9 @@ chrome.runtime.onMessage.addListener(
   },
 );
 
+// ========================================
 // Initialization
+// ========================================
 function init(): void {
   log("Content script initialized", window.location.href);
 
