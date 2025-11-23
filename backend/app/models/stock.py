@@ -88,6 +88,9 @@ class GirlMathRecommendationResponse(BaseModel):
     return_pct: str = Field(..., description="Formatted return percentage (e.g., '+1265.5%')")
     pastValueFormatted: str = Field(..., description="Formatted past investment amount (e.g., '$200')")
     todayValueFormatted: str = Field(..., description="Formatted current value with commas (e.g., '$2,730.99')")
+    historical_stock_price: float = Field(..., description="Stock price at the time in the past")
+    current_stock_price: float = Field(..., description="Current stock price per share")
+    shares_bought: float = Field(..., description="Number of shares that could have been bought")
     main_blurb: str = Field(..., description="Personalized message based on approach and goal")
     return_label: str = Field(default="Return", description="Label for return section")
     return_value: str = Field(..., description="Return percentage value (same as return_pct)")
@@ -102,6 +105,9 @@ class GirlMathRecommendationResponse(BaseModel):
                 "return_pct": "+25.5%",
                 "pastValueFormatted": "$200",
                 "todayValueFormatted": "$251.00",
+                "historical_stock_price": 100.50,
+                "current_stock_price": 125.63,
+                "shares_bought": 1.9900,
                 "main_blurb": "if your $200 had gone into NVDA 6 months ago, it could be worth around $251.00 today — a serious glow-up moment. Just a cute reminder for your long-term wealth era.",
                 "return_label": "Return",
                 "return_value": "+25.5%",

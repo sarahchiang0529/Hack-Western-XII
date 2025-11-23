@@ -136,7 +136,7 @@ class StockService:
             cart_total: Cart total amount
             ticker: Stock ticker symbol
             past_value: Historical stock price
-            today_value: Current stock price
+            today_value: Current total value of investment (not price per share)
             percent_gain: Percentage gain
             period_label: Human readable period (e.g., "3 months", "1 year")
             
@@ -448,7 +448,7 @@ class StockService:
             cart_total=cart_total,
             ticker=result.ticker,
             past_value=result.historical_stock_price,
-            today_value=result.current_stock_price,
+            today_value=result.current_value,
             percent_gain=result.percent_gain,
             period_label=period_label
         )
@@ -467,6 +467,9 @@ class StockService:
             return_pct=return_pct_formatted,
             pastValueFormatted=past_value_formatted,
             todayValueFormatted=today_value_formatted,
+            historical_stock_price=result.historical_stock_price,
+            current_stock_price=result.current_stock_price,
+            shares_bought=result.shares_bought,
             main_blurb=blurb,
             return_label="Return",
             return_value=return_pct_formatted,

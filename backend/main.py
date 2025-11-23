@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from app.core.config import settings
 from app.core.middleware import setup_middleware
 from app.api.routes import health
-from backend.app.api.routes import stockapi
+from app.api.routes import stockapi
 
 
 # Create FastAPI application
