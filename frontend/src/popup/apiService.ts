@@ -21,7 +21,7 @@ export interface GirlMathRequest {
 // ESG STOCKS: GET /stock/esg
 export async function fetchEsgStocks(): Promise<StockQuote[]> {
   try {
-    const response = await fetch(API_ENDPOINTS.GET_ESG_STOCKS);
+    const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.GET_ESG_STOCKS}`);
 
     if (!response.ok) {
       throw new Error(`Error fetching ESG stocks: ${response.statusText}`);
@@ -43,7 +43,7 @@ export async function fetchGirlMathRecommendation(
   requestBody: GirlMathRequest
 ): Promise<GirlMathRecommendationResponse | null> {
   try {
-    const response = await fetch(API_ENDPOINTS.GIRL_MATH_RECOMMENDATION, {
+    const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.GIRL_MATH_RECOMMENDATION}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(requestBody),
@@ -72,7 +72,7 @@ export async function fetchGirlMathRecommendation(
 // STOCK PRICE: GET /stock/price/{ticker}
 export async function fetchStockPrice(ticker: string): Promise<StockQuote | null> {
   try {
-    const url = `${API_ENDPOINTS.GET_STOCK_PRICE}/${ticker}`;
+    const url = `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.GET_STOCK_PRICE}/${ticker}`;
     const response = await fetch(url);
 
     if (!response.ok) {

@@ -399,50 +399,206 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
     const investment = await calculateInvestment(cartTotal, profile);
     const formattedTotal = `$${cartTotal.toFixed(2)}`;
     const formattedFuture = `$${investment.futureValue.toFixed(2)}`;
+    
+    // Calculate 6 months ago values (for the second view)
+    const monthsAgo = 6;
+    let historicalPrice6Months: number;
+    let currentPrice: number;
+    
+    if (investment.currentPrice > 0 && investment.historicalPrice > 0) {
+      // If we have both prices, estimate 6-month values based on the growth rate
+      const yearsGrowth = investment.currentPrice / investment.historicalPrice;
+      const monthlyGrowth = Math.pow(yearsGrowth, 1 / (investment.yearsAgo * 12));
+      const sixMonthGrowth = Math.pow(monthlyGrowth, 6);
+      
+      // Estimate 6 months ago price (rough approximation)
+      historicalPrice6Months = investment.currentPrice / sixMonthGrowth;
+      currentPrice = investment.currentPrice;
+    } else {
+      // Fallback to values matching the design image
+      historicalPrice6Months = 152.89;
+      currentPrice = 354.65;
+    }
+    
+    const investmentAmount6Months = cartTotal;
+    const futureValue6Months = Math.round((investmentAmount6Months * (currentPrice / historicalPrice6Months)) * 100) / 100;
+    const growthPercent6Months = Math.round(((currentPrice / historicalPrice6Months - 1) * 100) * 10) / 10;
 
-    // Remove loading popup and create actual popup
+    // Remove loading popup and create first view (Oprah GIF card)
     removePopup();
     popupPanel = document.createElement("div");
     popupPanel.id = "girl-math-popup-panel";
+    popupPanel.className = "wowie-popup-stage-1";
 
-  popupPanel.innerHTML = `
-    ${createPopupHeader("Girl Math", "Investment Perspective")}
-    <div class="girl-math-popup-content">
-      <!-- Cart Total Section -->
-      <div class="girl-math-cart-total">
-        <div class="girl-math-cart-total-label">CART TOTAL</div>
-        <div class="girl-math-cart-total-amount">${formattedTotal}</div>
-      </div>
-      
-      <!-- Stock Info -->
-      <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
+    // Use direct path to the GIF in assets folder
+    // The GIF file is at frontend/public/assets/oprah-winfrey.gif
+    // It will be copied to dist/assets/ during build
+    const gifUrl = chrome.runtime.getURL('assets/oprah-winfrey.gif');
+    log("GIF URL:", gifUrl);
 
-      <!-- Main explanation block - using backend's personalized message -->
-      <div class="girl-math-investment-box">
-        ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
-      </div>
-
-      <!-- Two stat cards -->
-      <div class="girl-math-stats">
-        <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">RETURN</div>
-          <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
+    popupPanel.innerHTML = `
+      ${createPopupHeader("WoWie", "Investment Perspective")}
+      <div class="girl-math-popup-content wowie-card-content">
+        <!-- Oprah GIF Section -->
+        <div class="wowie-oprah-section">
+          <div class="wowie-oprah-image-container">
+            <img id="wowie-oprah-gif" src="${gifUrl}" alt="Oprah WOW" class="wowie-oprah-gif" 
+                 style="display: block; width: 100%; height: auto;" />
+            <div id="wowie-oprah-placeholder" class="wowie-oprah-placeholder" style="display: none;">
+              <div class="wowie-wow-text">WOW</div>
+            </div>
+          </div>
+          <div class="wowie-question-text">
+            Girl... What happened to becoming a WoW?
+          </div>
+          <div class="wowie-footnote">
+            *Woman of Wealth.
+          </div>
         </div>
-        <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">FUTURE VALUE</div>
-          <div class="girl-math-stat-value">${formattedFuture}</div>
-        </div>
       </div>
-
-      <!-- Bottom message -->
-      <div class="girl-math-message">
-        You don't have to buy it today. Future you is watching.
-      </div>
-    </div>
-  `;
+    `;
 
     setupPopupCloseButton();
     appendPopupToBody();
+
+    // Wait for DOM to be ready, then set up GIF tracking
+    setTimeout(() => {
+      // Track GIF loops and transition after 2 complete plays
+      const gifElement = popupPanel?.querySelector('#wowie-oprah-gif') as HTMLImageElement;
+      const placeholderElement = popupPanel?.querySelector('#wowie-oprah-placeholder') as HTMLElement;
+      
+      // Log GIF URL for debugging
+      log("GIF URL:", gifUrl);
+      if (chrome.runtime?.getURL) {
+        const fullUrl = chrome.runtime.getURL('assets/oprah-winfrey.gif');
+        log("Full runtime URL:", fullUrl);
+        log("Extension ID:", chrome.runtime.id);
+      }
+      
+      // Add error handler for GIF loading
+      if (gifElement) {
+        // Check if image already loaded or errored
+        if (gifElement.complete) {
+          if (gifElement.naturalWidth === 0) {
+            log("GIF failed to load (naturalWidth is 0)");
+            gifElement.style.display = 'none';
+            if (placeholderElement) {
+              placeholderElement.style.display = 'flex';
+            }
+          } else {
+            log("GIF already loaded successfully");
+            if (placeholderElement) {
+              placeholderElement.style.display = 'none';
+            }
+          }
+        }
+        
+        gifElement.addEventListener('error', (e) => {
+          log("GIF failed to load. URL attempted:", gifUrl);
+          log("Expected location: frontend/public/assets/oprah-winfrey.gif");
+          log("After build, it should be at: dist/assets/oprah-winfrey.gif");
+          console.error("GIF load error:", e);
+          console.error("GIF element src:", gifElement.src);
+          
+          // Show placeholder if GIF fails to load
+          gifElement.style.display = 'none';
+          if (placeholderElement) {
+            placeholderElement.style.display = 'flex';
+          }
+        });
+        
+        gifElement.addEventListener('load', () => {
+          log("GIF loaded successfully!");
+          if (placeholderElement) {
+            placeholderElement.style.display = 'none';
+          }
+        });
+      } else {
+        log("ERROR: Could not find GIF element in DOM");
+      }
+      
+      // Define transition function - restore original investment popup design
+      const transitionToInvestmentView = () => {
+        if (!popupPanel) return;
+        
+        const formattedTotal = `$${cartTotal.toFixed(2)}`;
+        const formattedFuture = `$${investment.futureValue.toFixed(2)}`;
+        
+        // Transition to investment view with original design
+        popupPanel.className = "";
+        popupPanel.innerHTML = `
+          ${createPopupHeader("Girl Math", "Investment Perspective")}
+          <div class="girl-math-popup-content">
+            <!-- Cart Total Section -->
+            <div class="girl-math-cart-total">
+              <div class="girl-math-cart-total-label">CART TOTAL</div>
+              <div class="girl-math-cart-total-amount">${formattedTotal}</div>
+            </div>
+            
+            <!-- Stock Info -->
+            <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
+
+            <!-- Main explanation block - using backend's personalized message -->
+            <div class="girl-math-investment-box">
+              ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
+            </div>
+
+            <!-- Two stat cards -->
+            <div class="girl-math-stats">
+              <div class="girl-math-stat-box">
+                <div class="girl-math-stat-label">RETURN</div>
+                <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
+              </div>
+              <div class="girl-math-stat-box">
+                <div class="girl-math-stat-label">FUTURE VALUE</div>
+                <div class="girl-math-stat-value">${formattedFuture}</div>
+              </div>
+            </div>
+
+            <!-- Bottom message -->
+            <div class="girl-math-message">
+              You don't have to buy it today. Future you is watching.
+            </div>
+          </div>
+        `;
+
+        setupPopupCloseButton();
+      };
+      
+      // Set up GIF loop tracking
+      // The GIF will play once before transitioning to the investment view
+      // Adjust this duration to match your GIF's exact loop time (in milliseconds)
+      const totalDuration = 1000; // Duration for one complete GIF loop
+      
+      if (gifElement) {
+        
+        let startTime = Date.now();
+        
+        const checkLoop = setInterval(() => {
+          // Check if GIF has been playing long enough for 1 loop
+          const elapsed = Date.now() - startTime;
+          if (elapsed >= totalDuration) {
+            clearInterval(checkLoop);
+            transitionToInvestmentView();
+          }
+        }, 100); // Check every 100ms
+        
+        // Also set a fallback timeout
+        setTimeout(() => {
+          clearInterval(checkLoop);
+          transitionToInvestmentView();
+        }, totalDuration + 500); // Add 500ms buffer
+        
+        // If GIF fails to load, transition after a delay
+        gifElement.addEventListener('error', () => {
+          clearInterval(checkLoop);
+          setTimeout(transitionToInvestmentView, 2000);
+        });
+      } else {
+        // Fallback: if GIF element not found, show investment view after delay
+        setTimeout(transitionToInvestmentView, totalDuration + 1000);
+      }
+    }, 100);
   } catch (error) {
     log("Error creating investment popup", error);
     // On error, show a simple error message
