@@ -97,7 +97,7 @@ async def calculate_girl_math(
     "/calculate-with-recommendations",
     response_model=GirlMathRecommendationResponse,
     summary="Calculate 'What If I Invested Instead' with Personalized Recommendations",
-    description="Shows what your investment would be worth TODAY if you had invested in a randomly selected stock from your chosen approach (conservative/balanced/aggressive) X years ago. Returns a personalized message based on your financial goals and risk tolerance."
+    description="Shows what your investment would be worth TODAY if you had invested in a randomly selected stock from your chosen approach (conservative/balanced/aggressive) at a random short-term period (3 months, 6 months, 1 year, or 2 years). Returns a personalized message based on your financial goals and risk tolerance."
 )
 async def calculate_girl_math_with_recommendations(
     request: GirlMathRecommendationRequest,
@@ -109,10 +109,8 @@ async def calculate_girl_math_with_recommendations(
     Example request body:
     {
         "item_price": 150.00,
-        "years_ago": 2,
         "approach": "balanced",
         "goal": "travel",
-        "horizon": "medium",
         "shopping_site": "Amazon",
         "cart_total": 150.00
     }
@@ -122,6 +120,7 @@ async def calculate_girl_math_with_recommendations(
       * Conservative: VTI, VOO, BND (index funds, bonds)
       * Balanced: VT, XEQT, AAPL (diversified)
       * Aggressive: QQQ, NVDA, TSLA (high growth)
+    - Randomly select a time period (3 months, 6 months, 1 year, or 2 years)
     - Calculate historical performance
     - Generate a personalized message based on approach + goal
     
@@ -131,10 +130,8 @@ async def calculate_girl_math_with_recommendations(
     # Call the service method
     result = service.calculate_girl_math_with_recommendation(
         item_price=request.item_price,
-        years_ago=request.years_ago,
         approach=request.approach,
         goal=request.goal,
-        horizon=request.horizon,
         shopping_site=request.shopping_site,
         cart_total=request.cart_total
     )
