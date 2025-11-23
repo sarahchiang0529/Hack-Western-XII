@@ -3,9 +3,19 @@
   "name": "Chrome Extension Boilerplate",
   "version": "1.0.0",
   "description": "A modern Chrome extension built with Next.js, TypeScript, Tailwind CSS, and Vite",
+  "icons": {
+    "16": "icons/image.png",
+    "48": "icons/image.png",
+    "128": "icons/image.png"
+  },
   "action": {
     "default_popup": "src/popup/index.html",
-    "default_title": "Chrome Extension Boilerplate"
+    "default_title": "Chrome Extension Boilerplate",
+    "default_icon": {
+      "16": "icons/image.png",
+      "48": "icons/image.png",
+      "128": "icons/image.png"
+    }
   },
   "background": {
     "service_worker": "background/background.js",
