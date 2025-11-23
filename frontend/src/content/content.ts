@@ -400,49 +400,139 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
     const formattedTotal = `$${cartTotal.toFixed(2)}`;
     const formattedFuture = `$${investment.futureValue.toFixed(2)}`;
 
-    // Remove loading popup and create actual popup
+    // Remove loading popup and create first view (Oprah GIF card)
     removePopup();
     popupPanel = document.createElement("div");
     popupPanel.id = "girl-math-popup-panel";
+    popupPanel.className = "wowie-popup-stage-1";
 
-  popupPanel.innerHTML = `
-    ${createPopupHeader("Girl Math", "Investment Perspective")}
-    <div class="girl-math-popup-content">
-      <!-- Cart Total Section -->
-      <div class="girl-math-cart-total">
-        <div class="girl-math-cart-total-label">CART TOTAL</div>
-        <div class="girl-math-cart-total-amount">${formattedTotal}</div>
-      </div>
-      
-      <!-- Stock Info -->
-      <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
+    // Get the GIF URL using chrome.runtime.getURL
+    const gifUrl = chrome.runtime.getURL('assets/oprah-winfrey.gif');
+    log("GIF URL:", gifUrl);
 
-      <!-- Main explanation block - using backend's personalized message -->
-      <div class="girl-math-investment-box">
-        ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
-      </div>
-
-      <!-- Two stat cards -->
-      <div class="girl-math-stats">
-        <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">RETURN</div>
-          <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
-        </div>
-        <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">FUTURE VALUE</div>
-          <div class="girl-math-stat-value">${formattedFuture}</div>
+    popupPanel.innerHTML = `
+      ${createPopupHeader("WoWie", "Investment Perspective")}
+      <div class="girl-math-popup-content wowie-card-content">
+        <!-- Oprah GIF Section -->
+        <div class="wowie-oprah-section">
+          <div class="wowie-oprah-image-container">
+            <img id="wowie-oprah-gif" src="${gifUrl}" alt="Oprah WOW" class="wowie-oprah-gif" 
+                 style="display: block; width: 100%; height: auto;" />
+            <div id="wowie-oprah-placeholder" class="wowie-oprah-placeholder" style="display: none;">
+              <div class="wowie-wow-text">WOW</div>
+            </div>
+          </div>
+          <div class="wowie-question-text">
+            Girl... What happened to becoming a WoW?
+          </div>
+          <div class="wowie-footnote">
+            *Woman of Wealth.
+          </div>
         </div>
       </div>
-
-      <!-- Bottom message -->
-      <div class="girl-math-message">
-        You don't have to buy it today. Future you is watching.
-      </div>
-    </div>
-  `;
+    `;
 
     setupPopupCloseButton();
     appendPopupToBody();
+
+    // Wait for DOM to be ready, then set up GIF tracking
+    setTimeout(() => {
+      const gifElement = popupPanel?.querySelector('#wowie-oprah-gif') as HTMLImageElement;
+      const placeholderElement = popupPanel?.querySelector('#wowie-oprah-placeholder') as HTMLElement;
+      
+      // Define transition function - restore original investment popup design
+      const transitionToInvestmentView = () => {
+        if (!popupPanel) return;
+        
+        // Transition to investment view with original design
+        popupPanel.className = "";
+        popupPanel.innerHTML = `
+          ${createPopupHeader("Girl Math", "Investment Perspective")}
+          <div class="girl-math-popup-content">
+            <!-- Cart Total Section -->
+            <div class="girl-math-cart-total">
+              <div class="girl-math-cart-total-label">CART TOTAL</div>
+              <div class="girl-math-cart-total-amount">${formattedTotal}</div>
+            </div>
+            
+            <!-- Stock Info -->
+            <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
+
+            <!-- Main explanation block - using backend's personalized message -->
+            <div class="girl-math-investment-box">
+              ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
+            </div>
+
+            <!-- Two stat cards -->
+            <div class="girl-math-stats">
+              <div class="girl-math-stat-box">
+                <div class="girl-math-stat-label">RETURN</div>
+                <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
+              </div>
+              <div class="girl-math-stat-box">
+                <div class="girl-math-stat-label">FUTURE VALUE</div>
+                <div class="girl-math-stat-value">${formattedFuture}</div>
+              </div>
+            </div>
+
+            <!-- Bottom message -->
+            <div class="girl-math-message">
+              You don't have to buy it today. Future you is watching.
+            </div>
+          </div>
+        `;
+
+        setupPopupCloseButton();
+      };
+      
+      // Set up GIF loop tracking
+      // The GIF will play once before transitioning to the investment view
+      // Adjust this duration to match your GIF's exact loop time (in milliseconds)
+      const totalDuration = 1000; // Duration for one complete GIF loop
+      
+      // Add error handler for GIF loading
+      if (gifElement) {
+        gifElement.addEventListener('error', (e) => {
+          log("GIF failed to load. URL attempted:", gifUrl);
+          log("Make sure the GIF file exists at: frontend/public/assets/oprah-winfrey.gif");
+          console.error("GIF load error:", e);
+          
+          // Show placeholder if GIF fails to load
+          gifElement.style.display = 'none';
+          if (placeholderElement) {
+            placeholderElement.style.display = 'flex';
+          }
+        });
+        
+        gifElement.addEventListener('load', () => {
+          log("GIF loaded successfully!");
+          if (placeholderElement) {
+            placeholderElement.style.display = 'none';
+          }
+        });
+        
+        // Track GIF duration and transition after one loop
+        let startTime = Date.now();
+        
+        const checkLoop = setInterval(() => {
+          const elapsed = Date.now() - startTime;
+          if (elapsed >= totalDuration) {
+            clearInterval(checkLoop);
+            transitionToInvestmentView();
+          }
+        }, 100); // Check every 100ms
+        
+        // Fallback timeout
+        setTimeout(() => {
+          clearInterval(checkLoop);
+          transitionToInvestmentView();
+        }, totalDuration + 500); // Add 500ms buffer
+      } else {
+        log("ERROR: Could not find GIF element in DOM");
+        // Fallback: if GIF element not found, show investment view after delay
+        setTimeout(transitionToInvestmentView, totalDuration + 1000);
+      }
+    }, 100);
   } catch (error) {
     log("Error creating investment popup", error);
     // On error, show a simple error message
