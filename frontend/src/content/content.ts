@@ -136,14 +136,164 @@ function isCheckoutPage(): boolean {
 }
 
 function extractCartTotal(): number | null {
+  // First, try to find "Estimated Total" specifically (highest priority)
+  const totalKeywords = ['estimated total', 'order total', 'cart total', 'total'];
+  
+  for (const keyword of totalKeywords) {
+    try {
+      // Look for elements containing the keyword
+      const elements = Array.from(document.querySelectorAll('*')).filter(el => {
+        const text = (el.textContent || '').toLowerCase();
+        return text.includes(keyword) && text.includes('$');
+      });
+      
+      for (const el of elements) {
+        const text = el.textContent || '';
+        // Skip if this looks like a payment installment (e.g., "4 payments of $X")
+        if (/payments?\s+of|installment|klarna|afterpay|split/i.test(text)) {
+          continue;
+        }
+        
+        // Match price patterns like $181.94, prioritizing the largest number in the element
+        const priceMatches = text.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g);
+        if (priceMatches && priceMatches.length > 0) {
+          const prices = priceMatches
+            .map(m => parseFloat(m.replace(/[$,]/g, '')))
+            .filter(p => p > 0 && p < 100000);
+          
+          if (prices.length > 0) {
+            // Take the largest price from this element (usually the total, not subtotal)
+            const price = Math.max(...prices);
+            log(`Found cart total via keyword "${keyword}": $${price}`);
+            return price;
+          }
+        }
+      }
+    } catch {
+      // continue
+    }
+  }
+  
+  // Second: try PRICE_SELECTORS but prioritize elements with "total" in their class/id
   for (const selector of PRICE_SELECTORS) {
     try {
       for (const el of document.querySelectorAll(selector)) {
         const text = el.textContent || "";
-        const priceMatch = text.match(/\$?(\d+\.?\d*)/);
-        if (priceMatch) {
-          const price = parseFloat(priceMatch[1]);
-          if (price > 0 && price < 100000) return price;
+        const classId = (el.className || '') + ' ' + (el.id || '');
+        const isTotalElement = /total|subtotal|amount/i.test(classId);
+        
+        // Skip payment installments
+        if (/payments?\s+of|installment|klarna|afterpay|split/i.test(text)) {
+          continue;
+        }
+        
+        // Prioritize elements with "total" in class/id (but not "subtotal")
+        if ((isTotalElement && !/subtotal/i.test(classId)) || selector.includes('total')) {
+          const priceMatches = text.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g);
+          if (priceMatches && priceMatches.length > 0) {
+            const prices = priceMatches
+              .map(m => parseFloat(m.replace(/[$,]/g, '')))
+              .filter(p => p > 0 && p < 100000);
+            
+            if (prices.length > 0) {
+              // Take the largest price (the total, not subtotal)
+              const price = Math.max(...prices);
+              log(`Found cart total via selector "${selector}": $${price}`);
+              return price;
+            }
+          }
+        }
+      }
+    } catch {
+      // continue
+    }
+  }
+  
+  // Last resort: find all prices, exclude payment installments, take the largest reasonable one
+  const allText = document.body.textContent || "";
+  const priceMatches = allText.match(/\$(\d{1,3}(?:,\d{3})*(?:\.\d{2})?)/g);
+  if (priceMatches?.length) {
+    // Get context around each price to filter out installments
+    const pricesWithContext: Array<{price: number, context: string}> = [];
+    
+    for (let i = 0; i < priceMatches.length; i++) {
+      const match = priceMatches[i];
+      const price = parseFloat(match.replace(/[$,]/g, ''));
+      if (price > 0 && price < 100000) {
+        // Get surrounding text to check for payment keywords
+        const matchIndex = allText.indexOf(match);
+        const context = allText.substring(Math.max(0, matchIndex - 50), Math.min(allText.length, matchIndex + 50)).toLowerCase();
+        
+        // Skip if it's a payment installment
+        if (!/payments?\s+of|installment|klarna|afterpay|split/i.test(context)) {
+          pricesWithContext.push({price, context});
+        }
+      }
+    }
+    
+    if (pricesWithContext.length > 0) {
+      // Sort by price descending and take the largest (usually the cart total)
+      pricesWithContext.sort((a, b) => b.price - a.price);
+      const selectedPrice = pricesWithContext[0].price;
+      log(`Found cart total via fallback: $${selectedPrice}`);
+      return selectedPrice;
+    }
+  }
+
+  return null;
+}
+
+function extractBrandName(): string {
+  // First priority: Extract from URL/domain name
+  try {
+    const hostname = window.location.hostname.replace('www.', '').split('.')[0];
+    if (hostname && hostname.length > 2) {
+      // Capitalize first letter
+      const brandFromUrl = hostname.charAt(0).toUpperCase() + hostname.slice(1);
+      log(`Found brand from URL: ${brandFromUrl}`);
+      return brandFromUrl;
+    }
+  } catch {
+    // continue
+  }
+
+  // Second priority: Look in navbar/header for logo or brand name
+  const headerSelectors = [
+    'header [class*="logo"]',
+    'header [class*="brand"]',
+    'nav [class*="logo"]',
+    'nav [class*="brand"]',
+    '[class*="navbar"] [class*="logo"]',
+    '[class*="header"] [class*="logo"]',
+    '[id*="logo"]',
+    '[class*="site-logo"]',
+    'header h1',
+    'header a[href="/"]',
+    'nav a[href="/"]',
+  ];
+
+  for (const selector of headerSelectors) {
+    try {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        const text = (el.textContent || '').trim();
+        const alt = (el as HTMLElement).getAttribute('alt') || '';
+        const title = (el as HTMLElement).getAttribute('title') || '';
+        
+        // Check alt/title attributes first (common for logos)
+        const brandSource = alt || title || text;
+        if (brandSource && brandSource.length > 2 && brandSource.length < 50) {
+          // Extract brand name (usually first word, capitalized)
+          const brandMatch = brandSource.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,1})/);
+          if (brandMatch) {
+            const brand = brandMatch[1];
+            // Skip common non-brand words
+            const skipWords = ['Home', 'Logo', 'Menu', 'Navigation', 'Search', 'Cart', 'Account'];
+            if (!skipWords.includes(brand)) {
+              log(`Found brand from header/navbar "${selector}": ${brand}`);
+              return brand;
+            }
+          }
         }
       }
     } catch {
@@ -151,15 +301,52 @@ function extractCartTotal(): number | null {
     }
   }
 
-  const allText = document.body.textContent || "";
-  const priceMatches = allText.match(/\$(\d+\.?\d*)/g);
-  if (priceMatches?.length) {
-    const prices = priceMatches.map((m) => parseFloat(m.replace("$", "")));
-    const maxPrice = Math.max(...prices);
-    if (maxPrice > 0 && maxPrice < 100000) return maxPrice;
+  // Third priority: Try to find brand name from common e-commerce patterns
+  const brandSelectors = [
+    '[class*="brand"]',
+    '[data-brand]',
+    '[itemprop="brand"]',
+    '[class*="product-brand"]',
+    '[class*="brand-name"]',
+  ];
+
+  for (const selector of brandSelectors) {
+    try {
+      const elements = document.querySelectorAll(selector);
+      for (const el of elements) {
+        const text = (el.textContent || '').trim();
+        // Look for brand names (usually 1-3 words, capitalized)
+        const brandMatch = text.match(/^([A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+){0,2})/);
+        if (brandMatch && brandMatch[1].length > 2 && brandMatch[1].length < 50) {
+          // Skip extension-related words
+          const skipWords = ['WoWie', 'Girl', 'Math', 'Investment'];
+          if (!skipWords.includes(brandMatch[1])) {
+            log(`Found brand via selector "${selector}": ${brandMatch[1]}`);
+            return brandMatch[1];
+          }
+        }
+      }
+    } catch {
+      // continue
+    }
   }
 
-  return null;
+  // Fallback: try to extract from page title
+  const title = document.title;
+  const titleMatch = title.match(/^([A-Z][a-zA-Z]+)/);
+  if (titleMatch) {
+    const brand = titleMatch[1];
+    // Skip common non-brand words
+    const skipWords = ['Checkout', 'Cart', 'Basket', 'Shipping', 'Delivery', 'Order'];
+    if (!skipWords.includes(brand)) {
+      log(`Found brand from page title: ${brand}`);
+      return brand;
+    }
+  }
+
+  // Last resort: use "purchase" without brand
+  log("Could not extract brand name, using generic term");
+  return "purchase";
 }
 
 function getUserProfile(): Promise<OnboardingData | null> {
@@ -240,14 +427,11 @@ async function calculateInvestment(
 
     const requestBody = {
       item_price: cartTotal,
-      years_ago: 5,
       approach: approach,
       goal: goal,
       horizon: horizon,
       shopping_site: shoppingSite,
       cart_total: cartTotal,
-      // Add timestamp to ensure each request is unique (prevents any potential caching)
-      _timestamp: Date.now(),
     };
 
     log("Calling backend API", { 
@@ -280,13 +464,14 @@ async function calculateInvestment(
       log("Fetch completed", { status: response.status, ok: response.ok });
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      // Don't log fetch errors as errors - they're expected when backend isn't running
-      // The fallback will handle it gracefully
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
-        log("Backend timeout - using fallback values");
-        throw new Error("Request timeout: Backend did not respond within 10 seconds. Make sure the backend is running at http://localhost:8000");
+        const errorMsg = "Request timeout: Backend did not respond within 10 seconds. Make sure the backend is running at http://localhost:8000";
+        log("Backend timeout", { error: errorMsg });
+        throw new Error(errorMsg);
       }
-      log("Backend unavailable - using fallback values");
+      // Log network errors for debugging
+      const errorMsg = fetchError instanceof Error ? fetchError.message : String(fetchError);
+      log("Network error calling backend", { error: errorMsg });
       throw fetchError;
     }
 
@@ -310,8 +495,21 @@ async function calculateInvestment(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    // Silently use fallback - don't log as error since backend may not be running
-    log("Using fallback values (backend may not be running)", { error: errorMessage });
+    // Log the error for debugging
+    console.error("[Girl Math] API call failed:", errorMessage);
+    log("API call failed, using fallback values", { 
+      error: errorMessage,
+      url: `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.CALCULATE_WITH_RECOMMENDATIONS}`,
+      cartTotal 
+    });
+    
+    // Only use fallback if it's a network error or backend is unavailable
+    // If it's a validation error (400), we should show the error to the user
+    if (errorMessage.includes("400") || errorMessage.includes("API error")) {
+      // For validation errors, still use fallback but log the issue
+      console.warn("[Girl Math] Backend returned validation error, using fallback");
+    }
+    
     // Fallback to hardcoded values if API fails
     return {
       returnPercent: 30,
@@ -469,6 +667,9 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
         const futureValue6Months = Math.round((investmentAmount6Months * (currentPrice / historicalPrice6Months)) * 100) / 100;
         const growthPercent6Months = Math.round(((currentPrice / historicalPrice6Months - 1) * 100) * 10) / 10;
         
+        // Format the cart total for display
+        const formattedCartTotal = `$${cartTotal.toFixed(2)}`;
+        
         // Transition to WoWie investment view design
         popupPanel.className = "";
         popupPanel.innerHTML = `
@@ -476,7 +677,7 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
           <div class="girl-math-popup-content wowie-investment-content">
             <!-- Introductory Text -->
             <div class="wowie-intro-text">
-              If you invested this money into ${investment.stock} ${monthsAgo} months ago, you would've made
+              If you invested <strong>${formattedCartTotal}</strong> into ${investment.stock} ${monthsAgo} months ago, you would've made
             </div>
             
             <!-- Large Amount --> 
@@ -487,7 +688,7 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
             
             <!-- Growth Explanation Box -->
             <div class="wowie-explanation-box">
-              ~$${investmentAmount6Months.toFixed(2)} in ${investment.stock} ${monthsAgo} months ago is ~$${currentPrice.toFixed(2)} today. That's ${growthPercent6Months}% growth.
+              <strong>$${investmentAmount6Months.toFixed(2)}</strong> in ${investment.stock} ${monthsAgo} months ago is <strong>$${currentPrice.toFixed(2)}</strong> today. That's <strong>${growthPercent6Months}%</strong> growth.
             </div>
             
             <!-- Return and Future Value Boxes -->
@@ -504,7 +705,7 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
             
             <!-- Concluding Message -->
             <div class="wowie-conclusion">
-              You can still buy the leggings. But don't forget to grow some cash too. Just a cute reminder for your long-term wealth era.
+              You can still make your ${extractBrandName()} purchase. But don't forget to grow some cash too. Just a cute reminder for your long-term wealth era <3
             </div>
           </div>
         `;

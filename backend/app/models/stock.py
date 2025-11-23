@@ -78,6 +78,7 @@ class GirlMathRecommendationRequest(BaseModel):
     item_price: float = Field(..., ge=0.01, description="The cost of the item")
     approach: Literal["conservative", "balanced", "aggressive"] = Field(..., description="Investment approach/risk tolerance")
     goal: Literal["emergency", "travel", "future_home", "long_term_wealth", "other"] = Field(..., description="Financial goal for the investment")
+    horizon: Literal["short", "medium", "long"] = Field(..., description="Investment time horizon")
     shopping_site: str = Field(..., description="Name of the shopping website")
     cart_total: float = Field(..., ge=0.01, description="Total cart value (typically same as item_price)")
 
@@ -108,7 +109,7 @@ class GirlMathRecommendationResponse(BaseModel):
                 "historical_stock_price": 100.50,
                 "current_stock_price": 125.63,
                 "shares_bought": 1.9900,
-                "main_blurb": "if your $200 had gone into NVDA 6 months ago, it could be worth around $251.00 today — a serious glow-up moment. Just a cute reminder for your long-term wealth era.",
+                "main_blurb": "if your $200 had gone into NVDA 6 months ago, it could be worth around $251.00 today — a serious glow-up moment. Just a cute reminder for your long-term wealth era <3",
                 "return_label": "Return",
                 "return_value": "+25.5%",
                 "growth_label": "Value Today",

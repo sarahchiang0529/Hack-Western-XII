@@ -381,6 +381,7 @@ class StockService:
         item_price: float,
         approach: str,
         goal: str,
+        horizon: str,
         shopping_site: str,
         cart_total: float
     ) -> Optional[GirlMathRecommendationResponse]:

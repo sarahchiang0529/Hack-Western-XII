@@ -132,6 +132,7 @@ async def calculate_girl_math_with_recommendations(
         item_price=request.item_price,
         approach=request.approach,
         goal=request.goal,
+        horizon=request.horizon,
         shopping_site=request.shopping_site,
         cart_total=request.cart_total
     )
