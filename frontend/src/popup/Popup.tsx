@@ -17,9 +17,15 @@ const Popup: React.FC = () => {
   useEffect(() => {
     // Check if onboarding is already complete
     chrome.storage.sync.get(['girlMathProfile', 'onboardingComplete'], (result) => {
-      if (result.onboardingComplete && result.girlMathProfile) {
+      const girlMathProfile = result.girlMathProfile as OnboardingData | undefined;
+      if (result.onboardingComplete && girlMathProfile) {
         setIsComplete(true);
-        setData(result.girlMathProfile);
+        setData({
+          riskProfile: girlMathProfile.riskProfile ?? null,
+          timeline: girlMathProfile.timeline ?? null,
+          focus: girlMathProfile.focus ?? null,
+          specificGoal: girlMathProfile.specificGoal ?? "",
+        });
       }
       setIsLoading(false);
     });

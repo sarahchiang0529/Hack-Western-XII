@@ -50,7 +50,7 @@ export interface MessageResponse<T = any> {
 }
 
 //backend API response types
-export interface StockQUote {
+export interface StockQuote {
   ticker: string;
   price: number;
   company_name: string;
