@@ -280,10 +280,13 @@ async function calculateInvestment(
       log("Fetch completed", { status: response.status, ok: response.ok });
     } catch (fetchError) {
       clearTimeout(timeoutId);
-      log("Fetch error caught", fetchError);
+      // Don't log fetch errors as errors - they're expected when backend isn't running
+      // The fallback will handle it gracefully
       if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        log("Backend timeout - using fallback values");
         throw new Error("Request timeout: Backend did not respond within 10 seconds. Make sure the backend is running at http://localhost:8000");
       }
+      log("Backend unavailable - using fallback values");
       throw fetchError;
     }
 
@@ -307,8 +310,8 @@ async function calculateInvestment(
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    log("Error fetching from backend, using fallback", { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
-    console.error("[Girl Math] Full error details:", error);
+    // Silently use fallback - don't log as error since backend may not be running
+    log("Using fallback values (backend may not be running)", { error: errorMessage });
     // Fallback to hardcoded values if API fails
     return {
       returnPercent: 30,
@@ -355,7 +358,7 @@ function appendPopupToBody(): void {
 function createPopupHeader(title: string, subtitle: string): string {
   return `
     <div class="girl-math-popup-header">
-      <div>
+      <div class="girl-math-popup-title-subtitle-wrapper">
         <h3 class="girl-math-popup-title">${title}</h3>
         <div class="girl-math-popup-subtitle">${subtitle}</div>
       </div>
@@ -444,40 +447,64 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
       const transitionToInvestmentView = () => {
         if (!popupPanel) return;
         
-        // Transition to investment view with original design
+        // Calculate 6 months ago values for WoWie design
+        const monthsAgo = 6;
+        let historicalPrice6Months: number;
+        let currentPrice: number;
+        
+        if (investment.currentPrice > 0 && investment.historicalPrice > 0) {
+          // Estimate 6-month values based on the growth rate
+          const yearsGrowth = investment.currentPrice / investment.historicalPrice;
+          const monthlyGrowth = Math.pow(yearsGrowth, 1 / (investment.yearsAgo * 12));
+          const sixMonthGrowth = Math.pow(monthlyGrowth, 6);
+          historicalPrice6Months = investment.currentPrice / sixMonthGrowth;
+          currentPrice = investment.currentPrice;
+        } else {
+          // Fallback values
+          historicalPrice6Months = 152.89;
+          currentPrice = 354.65;
+        }
+        
+        const investmentAmount6Months = cartTotal;
+        const futureValue6Months = Math.round((investmentAmount6Months * (currentPrice / historicalPrice6Months)) * 100) / 100;
+        const growthPercent6Months = Math.round(((currentPrice / historicalPrice6Months - 1) * 100) * 10) / 10;
+        
+        // Transition to WoWie investment view design
         popupPanel.className = "";
         popupPanel.innerHTML = `
-          ${createPopupHeader("Girl Math", "Investment Perspective")}
-          <div class="girl-math-popup-content">
-            <!-- Cart Total Section -->
-            <div class="girl-math-cart-total">
-              <div class="girl-math-cart-total-label">CART TOTAL</div>
-              <div class="girl-math-cart-total-amount">${formattedTotal}</div>
+          ${createPopupHeader("WoWie", "Investment Perspective")}
+          <div class="girl-math-popup-content wowie-investment-content">
+            <!-- Introductory Text -->
+            <div class="wowie-intro-text">
+              If you invested this money into ${investment.stock} ${monthsAgo} months ago, you would've made
             </div>
             
-            <!-- Stock Info -->
-            <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
-
-            <!-- Main explanation block - using backend's personalized message -->
-            <div class="girl-math-investment-box">
-              ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
+            <!-- Large Amount --> 
+            <div class="wowie-large-amount">$${futureValue6Months.toFixed(2)}</div>
+            
+            <!-- Separator Line -->
+            <div class="wowie-separator"></div>
+            
+            <!-- Growth Explanation Box -->
+            <div class="wowie-explanation-box">
+              ~$${investmentAmount6Months.toFixed(2)} in ${investment.stock} ${monthsAgo} months ago is ~$${currentPrice.toFixed(2)} today. That's ${growthPercent6Months}% growth.
             </div>
-
-            <!-- Two stat cards -->
-            <div class="girl-math-stats">
-              <div class="girl-math-stat-box">
-                <div class="girl-math-stat-label">RETURN</div>
-                <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
+            
+            <!-- Return and Future Value Boxes -->
+            <div class="wowie-comparison-boxes">
+              <div class="wowie-comparison-box">
+                <div class="wowie-comparison-label">Return</div>
+                <div class="wowie-comparison-value">${growthPercent6Months}%</div>
               </div>
-              <div class="girl-math-stat-box">
-                <div class="girl-math-stat-label">FUTURE VALUE</div>
-                <div class="girl-math-stat-value">${formattedFuture}</div>
+              <div class="wowie-comparison-box">
+                <div class="wowie-comparison-label">Future Value</div>
+                <div class="wowie-comparison-value">$${futureValue6Months.toFixed(2)}</div>
               </div>
             </div>
-
-            <!-- Bottom message -->
-            <div class="girl-math-message">
-              You don't have to buy it today. Future you is watching.
+            
+            <!-- Concluding Message -->
+            <div class="wowie-conclusion">
+              You can still buy the leggings. But don't forget to grow some cash too. Just a cute reminder for your long-term wealth era.
             </div>
           </div>
         `;
