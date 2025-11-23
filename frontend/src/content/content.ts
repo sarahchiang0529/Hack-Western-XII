@@ -11,6 +11,7 @@ import type {
   Timeline,
   Focus,
 } from "@/shared/types";
+import { API_ENDPOINTS } from "@/shared/constants";
 
 // ========================================
 // Constants
@@ -176,13 +177,149 @@ function saveOnboardingData(): void {
   );
 }
 
-function calculateInvestment(cartTotal: number) {
-  const returnPercent = 30;
-  return {
-    returnPercent,
-    futureValue: Math.round(cartTotal * 1.3 * 100) / 100,
-    stock: "NVDA",
-  };
+interface InvestmentData {
+  returnPercent: number;
+  futureValue: number;
+  stock: string;
+  mainBlurb: string;
+  yearsAgo: number;
+  historicalPrice: number;
+  currentPrice: number;
+}
+
+function mapRiskProfileToApproach(riskProfile: RiskProfile | null): "conservative" | "balanced" | "aggressive" {
+  switch (riskProfile) {
+    case "safe":
+      return "conservative";
+    case "balanced":
+      return "balanced";
+    case "mainCharacter":
+      return "aggressive";
+    default:
+      return "balanced";
+  }
+}
+
+function mapTimelineToHorizon(timeline: Timeline | null): string {
+  switch (timeline) {
+    case "short":
+      return "short";
+    case "mid":
+      return "medium";
+    case "long":
+      return "long";
+    default:
+      return "medium";
+  }
+}
+
+function mapFocusToGoal(focus: Focus | null): "emergency" | "travel" | "future_home" | "long_term_wealth" | "other" {
+  switch (focus) {
+    case "impulse":
+      return "emergency";
+    case "confidence":
+      return "long_term_wealth";
+    case "future":
+      return "future_home";
+    case "goal":
+      return "other";
+    default:
+      return "other";
+  }
+}
+
+async function calculateInvestment(
+  cartTotal: number,
+  profile: OnboardingData | null
+): Promise<InvestmentData> {
+  try {
+    const approach = mapRiskProfileToApproach(profile?.riskProfile || null);
+    const horizon = mapTimelineToHorizon(profile?.timeline || null);
+    const goal = mapFocusToGoal(profile?.focus || null);
+    const shoppingSite = new URL(window.location.href).hostname.replace("www.", "");
+
+    const requestBody = {
+      item_price: cartTotal,
+      years_ago: 5,
+      approach: approach,
+      goal: goal,
+      horizon: horizon,
+      shopping_site: shoppingSite,
+      cart_total: cartTotal,
+      // Add timestamp to ensure each request is unique (prevents any potential caching)
+      _timestamp: Date.now(),
+    };
+
+    log("Calling backend API", { 
+      url: `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.CALCULATE_WITH_RECOMMENDATIONS}`, 
+      body: requestBody 
+    });
+
+    // Add timeout to fetch
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+      log("Fetch timeout - aborting request");
+    }, 10000); // 10 second timeout
+
+    let response;
+    try {
+      log("Starting fetch request...");
+      response = await fetch(
+        `${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.CALCULATE_WITH_RECOMMENDATIONS}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+          signal: controller.signal,
+        }
+      );
+      clearTimeout(timeoutId);
+      log("Fetch completed", { status: response.status, ok: response.ok });
+    } catch (fetchError) {
+      clearTimeout(timeoutId);
+      log("Fetch error caught", fetchError);
+      if (fetchError instanceof Error && fetchError.name === 'AbortError') {
+        throw new Error("Request timeout: Backend did not respond within 10 seconds. Make sure the backend is running at http://localhost:8000");
+      }
+      throw fetchError;
+    }
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      log("API error response", { status: response.status, statusText: response.statusText, body: errorText });
+      throw new Error(`API error: ${response.status} ${response.statusText} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    log("API response received", data);
+
+    return {
+      returnPercent: Math.round(data.percent_gain * 10) / 10,
+      futureValue: Math.round(data.current_value * 100) / 100,
+      stock: data.ticker,
+      mainBlurb: data.main_blurb || "",
+      yearsAgo: data.years_ago || 5,
+      historicalPrice: data.historical_stock_price || 0,
+      currentPrice: data.current_stock_price || 0,
+    };
+  } catch (error) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    log("Error fetching from backend, using fallback", { error: errorMessage, stack: error instanceof Error ? error.stack : undefined });
+    console.error("[Girl Math] Full error details:", error);
+    // Fallback to hardcoded values if API fails
+    return {
+      returnPercent: 30,
+      futureValue: Math.round(cartTotal * 1.3 * 100) / 100,
+      stock: "NVDA",
+      mainBlurb: `${cartTotal.toFixed(2)} in NVDA last 5 years would be ~${Math.round(cartTotal * 1.3 * 100) / 100} today. That's 30% growth.`,
+      yearsAgo: 5,
+      historicalPrice: 0,
+      currentPrice: 0,
+    };
+  }
 }
 
 function canProceedOnboarding(): boolean {
@@ -242,15 +379,31 @@ function createOptionButton(
 }
 
 // ---------- Investment popup ----------
-function createInvestmentPopup(cartTotal: number): void {
+async function createInvestmentPopup(cartTotal: number, profile: OnboardingData | null): Promise<void> {
   removePopup();
 
-  const investment = calculateInvestment(cartTotal);
-  const formattedTotal = `$${cartTotal.toFixed(2)}`;
-  const formattedFuture = `$${investment.futureValue.toFixed(2)}`;
-
+  // Show loading state
   popupPanel = document.createElement("div");
   popupPanel.id = "girl-math-popup-panel";
+  popupPanel.innerHTML = `
+    ${createPopupHeader("Girl Math", "Investment Perspective")}
+    <div class="girl-math-popup-content">
+      <div style="text-align: center; padding: 40px 20px;">
+        <div style="font-size: 14px; color: var(--girl-math-text-primary);">Calculating...</div>
+      </div>
+    </div>
+  `;
+  appendPopupToBody();
+
+  try {
+    const investment = await calculateInvestment(cartTotal, profile);
+    const formattedTotal = `$${cartTotal.toFixed(2)}`;
+    const formattedFuture = `$${investment.futureValue.toFixed(2)}`;
+
+    // Remove loading popup and create actual popup
+    removePopup();
+    popupPanel = document.createElement("div");
+    popupPanel.id = "girl-math-popup-panel";
 
   popupPanel.innerHTML = `
     ${createPopupHeader("Girl Math", "Investment Perspective")}
@@ -262,11 +415,11 @@ function createInvestmentPopup(cartTotal: number): void {
       </div>
       
       <!-- Stock Info -->
-      <div class="girl-math-stock-info">${investment.stock} Last 5 years</div>
+      <div class="girl-math-stock-info">${investment.stock} Last ${investment.yearsAgo} years</div>
 
-      <!-- Main explanation block -->
+      <!-- Main explanation block - using backend's personalized message -->
       <div class="girl-math-investment-box">
-        ${formattedTotal} in ${investment.stock} last 5 years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.
+        ${investment.mainBlurb || `${formattedTotal} in ${investment.stock} last ${investment.yearsAgo} years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.`}
       </div>
 
       <!-- Two stat cards -->
@@ -288,8 +441,27 @@ function createInvestmentPopup(cartTotal: number): void {
     </div>
   `;
 
-  setupPopupCloseButton();
-  appendPopupToBody();
+    setupPopupCloseButton();
+    appendPopupToBody();
+  } catch (error) {
+    log("Error creating investment popup", error);
+    // On error, show a simple error message
+    removePopup();
+    popupPanel = document.createElement("div");
+    popupPanel.id = "girl-math-popup-panel";
+    popupPanel.innerHTML = `
+      ${createPopupHeader("Girl Math", "Investment Perspective")}
+      <div class="girl-math-popup-content">
+        <div style="text-align: center; padding: 40px 20px;">
+          <div style="font-size: 14px; color: var(--girl-math-text-primary);">
+            Unable to calculate investment. Please try again later.
+          </div>
+        </div>
+      </div>
+    `;
+    setupPopupCloseButton();
+    appendPopupToBody();
+  }
 }
 
 // ---------- Onboarding popup ----------
@@ -313,7 +485,7 @@ function createOnboardingPopup(): void {
       <div class="girl-math-progress">
         <div class="girl-math-progress-bar" style="width: ${progress}%"></div>
       </div>
-
+      
       <div class="girl-math-onboarding-step active">
         <h4 class="girl-math-onboarding-title">${stepData.title}</h4>
         <p class="girl-math-onboarding-subtitle">${stepData.subtitle}</p>
@@ -334,7 +506,7 @@ function createOnboardingPopup(): void {
             : ""
         }
       </div>
-
+      
       <div class="girl-math-onboarding-nav">
         ${
           onboardingStep > 1
@@ -398,27 +570,27 @@ function setupOnboardingEventListeners(): void {
 
   const goalInput = popupPanel?.querySelector("#girl-math-goal-input") as HTMLInputElement;
   goalInput?.addEventListener("input", (e) => {
-    onboardingData.specificGoal = (e.target as HTMLInputElement).value;
-  });
+      onboardingData.specificGoal = (e.target as HTMLInputElement).value;
+    });
 
   popupPanel
     ?.querySelector("#girl-math-back")
     ?.addEventListener("click", () => {
-      onboardingStep = Math.max(1, onboardingStep - 1);
-      createOnboardingPopup();
-    });
+    onboardingStep = Math.max(1, onboardingStep - 1);
+    createOnboardingPopup();
+  });
 
   popupPanel
     ?.querySelector("#girl-math-next")
     ?.addEventListener("click", () => {
-      if (!canProceedOnboarding()) return;
-      if (onboardingStep < 3) {
-        onboardingStep++;
-        createOnboardingPopup();
-      } else {
-        saveOnboardingData();
-      }
-    });
+    if (!canProceedOnboarding()) return;
+    if (onboardingStep < 3) {
+      onboardingStep++;
+      createOnboardingPopup();
+    } else {
+      saveOnboardingData();
+    }
+  });
 }
 
 // ========================================
@@ -473,7 +645,7 @@ async function checkAndShowPanel(): Promise<void> {
   if (isOnboardingComplete) {
     const cartTotal = extractCartTotal() || 120;
     log("Creating investment popup", { cartTotal });
-    createInvestmentPopup(cartTotal);
+    createInvestmentPopup(cartTotal, profile);
   } else {
     log("Creating onboarding popup");
     onboardingStep = 1;
@@ -492,9 +664,9 @@ chrome.runtime.onMessage.addListener(
         sendResponse({
           success: true,
           data: {
-            title: document.title,
-            url: window.location.href,
-            isCheckout: isCheckoutPage(),
+          title: document.title,
+          url: window.location.href,
+          isCheckout: isCheckoutPage(),
           },
         });
         break;

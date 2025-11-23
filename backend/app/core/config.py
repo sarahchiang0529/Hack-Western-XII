@@ -15,10 +15,9 @@ class Settings(BaseSettings):
     DESCRIPTION: str = "FastAPI backend for Chrome extension"
     
     # CORS Settings
+    # Allow all origins for content scripts running on any website
     ALLOWED_ORIGINS: List[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "chrome-extension://*",  # Allow all Chrome extensions
+        "*",  # Allow all origins (needed for Chrome extension content scripts)
     ]
     
     # Server Settings

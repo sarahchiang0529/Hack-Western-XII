@@ -16,10 +16,11 @@ def setup_middleware(app: FastAPI) -> None:
     """
     
     # CORS Middleware - Essential for Chrome extension
+    # Note: When allow_origins=["*"], allow_credentials must be False
     app.add_middleware(
         CORSMiddleware,
-        allow_origins=settings.ALLOWED_ORIGINS,
-        allow_credentials=True,
+        allow_origins=["*"],  # Allow all origins for content scripts
+        allow_credentials=False,  # Must be False when using "*"
         allow_methods=["*"],  # Allow all HTTP methods
         allow_headers=["*"],  # Allow all headers
         expose_headers=["*"],
