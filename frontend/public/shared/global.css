@@ -418,7 +418,8 @@ body {
 }
 
 .wowie-question-text {
-  font-size: 18px;
+  font-size: 25px;
+  font-weight: 400;
   font-style: italic;
   color: var(--girl-math-text-primary);
   text-align: center;

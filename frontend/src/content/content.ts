@@ -716,7 +716,7 @@ async function createInvestmentPopup(cartTotal: number, profile: OnboardingData 
       // Set up GIF loop tracking
       // The GIF will play once before transitioning to the investment view
       // Adjust this duration to match your GIF's exact loop time (in milliseconds)
-      const totalDuration = 1000; // Duration for one complete GIF loop
+      const totalDuration = 5000; // Duration for two complete GIF loop
       
       // Add error handler for GIF loading
       if (gifElement) {
