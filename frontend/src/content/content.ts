@@ -12,8 +12,6 @@ import type {
   Focus,
 } from "@/shared/types";
 
-import "@/shared/global.css";
-
 // ========================================
 // Constants
 // ========================================
@@ -257,32 +255,28 @@ function createInvestmentPopup(cartTotal: number): void {
   popupPanel.innerHTML = `
     ${createPopupHeader("Girl Math", "Investment Perspective")}
     <div class="girl-math-popup-content">
-      <!-- Top row: CART TOTAL + NVDA Last 5 years -->
+      <!-- Cart Total Section -->
       <div class="girl-math-cart-total">
-        <div class="girl-math-cart-total-left">
-          <div class="girl-math-cart-total-label">CART TOTAL</div>
-          <div class="girl-math-cart-total-amount">${formattedTotal}</div>
-        </div>
-        <div class="girl-math-cart-total-meta">
-          <div class="girl-math-cart-total-meta-symbol">${investment.stock}</div>
-          <div class="girl-math-cart-total-meta-period">Last 5 years</div>
-        </div>
+        <div class="girl-math-cart-total-label">CART TOTAL</div>
+        <div class="girl-math-cart-total-amount">${formattedTotal}</div>
       </div>
+      
+      <!-- Stock Info -->
+      <div class="girl-math-stock-info">${investment.stock} Last 5 years</div>
 
       <!-- Main explanation block -->
       <div class="girl-math-investment-box">
-        ${formattedTotal} in ${investment.stock} last 5 years would be ~${formattedFuture} today.
-        That's ${investment.returnPercent}% growth.
+        ${formattedTotal} in ${investment.stock} last 5 years would be ~${formattedFuture} today. That's ${investment.returnPercent}% growth.
       </div>
 
       <!-- Two stat cards -->
       <div class="girl-math-stats">
         <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">Return</div>
+          <div class="girl-math-stat-label">RETURN</div>
           <div class="girl-math-stat-value">+${investment.returnPercent}%</div>
         </div>
         <div class="girl-math-stat-box">
-          <div class="girl-math-stat-label">Future Value</div>
+          <div class="girl-math-stat-label">FUTURE VALUE</div>
           <div class="girl-math-stat-value">${formattedFuture}</div>
         </div>
       </div>

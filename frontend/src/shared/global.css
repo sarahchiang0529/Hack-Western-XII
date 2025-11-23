@@ -261,15 +261,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid var(--girl-math-border);
-}
-
-.girl-math-cart-total-left {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+  margin-bottom: 8px;
 }
 
 .girl-math-cart-total-label {
@@ -277,7 +269,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--girl-math-text-secondary);
+  color: var(--girl-math-text-primary);
   font-family: var(--font-sans);
 }
 
@@ -288,33 +280,22 @@ body {
   font-family: var(--font-serif);
 }
 
-/* Right side: NVDA / Last 5 years */
-
-.girl-math-cart-total-meta {
-  text-align: right;
-  font-family: var(--font-sans);
-}
-
-.girl-math-cart-total-meta-symbol {
-  font-size: 14px;
-  font-weight: 600;
+.girl-math-stock-info {
+  font-size: 13px;
   color: var(--girl-math-text-primary);
-}
-
-.girl-math-cart-total-meta-period {
-  font-size: 12px;
-  color: var(--girl-math-text-secondary);
+  margin-bottom: 16px;
+  font-family: var(--font-sans);
 }
 
 /* Main explanation box */
 
 .girl-math-investment-box {
-  background: var(--girl-math-white);
-  padding: 16px;
+  background: rgba(0, 0, 0, 0) !important;
+  padding: 14px 16px;
   border-radius: 8px;
   border: 1px solid var(--girl-math-border);
-  margin-bottom: 16px;
-  font-size: 14px;
+  margin-bottom: 12px;
+  font-size: 13px;
   line-height: 1.6;
   color: var(--girl-math-text-primary);
   font-family: var(--font-sans);
@@ -325,30 +306,30 @@ body {
 .girl-math-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 20px;
+  gap: 10px;
+  margin-bottom: 0;
 }
 
 .girl-math-stat-box {
   background: var(--girl-math-white);
-  padding: 16px;
+  padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid var(--girl-math-border);
   text-align: center;
 }
 
 .girl-math-stat-label {
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  color: var(--girl-math-text-secondary);
+  color: var(--girl-math-text-primary);
   margin-bottom: 8px;
   font-family: var(--font-sans);
 }
 
 .girl-math-stat-value {
-  font-size: 24px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--girl-math-text-primary);
   font-family: var(--font-serif);
@@ -357,14 +338,16 @@ body {
 /* Bottom message */
 
 .girl-math-message {
-  margin-top: 4px;
-  padding: 14px 0 0;
-  font-size: 13px;
+  margin-top: 16px;
+  padding: 0;
+  font-size: 12px;
   color: var(--girl-math-text-primary);
   text-align: center;
   font-style: italic;
   line-height: 1.5;
   font-family: var(--font-sans);
+  max-width: calc(100% - 0px);
+  box-sizing: border-box;
 }
 
 /* ============================================
@@ -377,4 +360,3 @@ body {
     top: 10px;
   }
 }
-
