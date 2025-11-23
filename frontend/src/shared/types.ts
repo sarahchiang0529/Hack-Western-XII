@@ -49,3 +49,32 @@ export interface MessageResponse<T = any> {
   error?: string;
 }
 
+//backend API response types
+export interface StockQUote {
+  ticker: string;
+  price: number;
+  company_name: string;
+  sector: string;
+  sustainability_score: string; 
+}
+
+export interface GirlMathRecommendationResponse {
+    main_blurb: string;
+    ticker: string;
+    item_price: number;
+    years_ago: number;
+    historical_stock_price: number;
+    current_stock_price: number;
+    shares_bought: number;
+    current_value: number;
+    profit_loss: number;
+    percent_gain: number;
+    is_free: boolean;
+    years_until_free: number;
+    growth_rate_percentage: number;
+    approach: string;
+    goal: string;
+    horizon: string;
+    shopping_site: string;
+    timestamp: string;
+}
