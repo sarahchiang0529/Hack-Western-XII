@@ -20,6 +20,9 @@ export const DEFAULTS = {
 export const API_ENDPOINTS = {
   BASE_URL: 'http://localhost:8000/api',
   CALCULATE_WITH_RECOMMENDATIONS: '/stock/calculate-with-recommendations',
+  GET_ESG_STOCKS: '/stock/esg',
+  GIRL_MATH_RECOMMENDATION: '/stock/calculate_recommendation',
+  GET_STOCK_PRICE: '/stock/price',
 } as const;
 
 // Extension-specific constants
