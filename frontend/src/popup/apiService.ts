@@ -3,37 +3,43 @@
 import { API_ENDPOINTS } from 'src/shared/constants';
 import { 
   StockQuote, 
-  GirlMathRecommendationResponse 
+  GirlMathRecommendationResponse,
+  CalculateWithRecommendationsResponse,
+  CalculateWithRecommendationsRequest
 } from 'src/shared/types'; 
 
 // type for the request body for Girl Math
 export interface GirlMathRequest {
-    item_price: number;
-    years_ago: number;
-    approach: string; // map from RiskProfile
-    goal: string;     // map from SpecificGoal
-    horizon: string;  // map from Timeline
-    shopping_site: string;
-    cart_total: number;
+  item_price: number;
+  approach: string;
+  goal: string;
+  horizon: string;
+  shopping_site: string;
+  cart_total: number;
 }
 
-
-// ESG STOCKS: GET /stock/esg
-export async function fetchEsgStocks(): Promise<StockQuote[]> {
+export async function fetchCalculateWithRecommendations(
+  requestBody: CalculateWithRecommendationsRequest
+): Promise<CalculateWithRecommendationsResponse | null> {
   try {
-    const response = await fetch(`${API_ENDPOINTS.BASE_URL}${API_ENDPOINTS.GET_ESG_STOCKS}`);
-
-    if (!response.ok) {
-      throw new Error(`Error fetching ESG stocks: ${response.statusText}`);
-    }
-
-    // returns an array of StockQuote objects
-    const data: StockQuote[] = await response.json();
-    return data;
+    const response = await fetch(`${API_ENDPOINTS.BASE_URL}/stock/calculate-with-recommendations`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(requestBody),
+    });
+  
+  if (response.status === 400) {
+    const errorDetail = await response.json();
+    throw new Error(errorDetail.detail || "Invalid input or data unavailable.");
+  }
+  if (!response.ok) {
+    throw new Error(`HTTP Error: Status ${response.status}`);
+  }
+  const result: CalculateWithRecommendationsResponse = await response.json();
+  return result;
   } catch (error) {
-    console.error("API Error: fetchEsgStocks failed.", error);
-    // returns an empty array on failure
-    return []; 
+    console.error("API Error: fetchCalculateWithRecommendations failed.", error);
+    return null;
   }
 }
 

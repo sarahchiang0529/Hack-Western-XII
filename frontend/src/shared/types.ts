@@ -78,3 +78,28 @@ export interface GirlMathRecommendationResponse {
     shopping_site: string;
     timestamp: string;
 }
+
+export interface CalculateWithRecommendationsResponse {
+  ticker: string;
+  period_label: string;
+  return_pct: string;
+  pastValueFormatted: string;
+  todayValueFormatted: string;
+  historical_stock_price: number;
+  current_stock_price: number;
+  shares_bought: number;
+  main_blurb: string;
+  return_label: string;
+  return_value: string;
+  growth_label: string;
+  growth_value: string;
+}
+
+export interface CalculateWithRecommendationsRequest {
+  item_price: number;
+  approach: string;
+  goal: string;
+  horizon: string;
+  shopping_site: string;
+  cart_total: number;
+}
