@@ -6,12 +6,12 @@
    ============================================ */
 :root {
   /* Colors */
-  --girl-math-green: #2C5F4D;
+  --girl-math-green: #8F8660;
   --girl-math-green-dark: #1f4538;
   --girl-math-beige: #E8DDD3;
   --girl-math-white: #ffffff;
-  --girl-math-text-primary: #2C5F4D;
-  --girl-math-text-secondary: rgba(44, 95, 77, 0.7);
+  --girl-math-text-primary: #7A4955;
+  --girl-math-text-secondary: #494328;
   --girl-math-border: rgba(44, 95, 77, 0.2);
   --girl-math-border-hover: rgba(44, 95, 77, 0.3);
   --girl-math-bg-light: rgba(44, 95, 77, 0.05);
@@ -311,7 +311,7 @@ body {
 }
 
 .girl-math-stat-box {
-  background: var(--girl-math-white);
+  background: transparent;
   padding: 12px 14px;
   border-radius: 8px;
   border: 1px solid var(--girl-math-border);
