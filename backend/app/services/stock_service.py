@@ -3,7 +3,7 @@ Stock Service - External Data & Logic
 This will handle communication with Yahoo Finance and 'Girl Math' Calculations.
 """
 from typing import Dict, List, Optional
-from datetime import datetime
+from datetime import datetime, timedelta
 import uuid
 import math
 import random
@@ -17,6 +17,13 @@ APPROACH_STOCKS = {
     "balanced": ["VT", "XEQT", "AAPL"],
     "aggressive": ["QQQ", "NVDA", "TSLA"]
 }
+
+# Hardcoded time periods (in days and labels)
+TIME_PERIODS = [
+    {"days": 90, "label": "3 months", "years": 0.25},
+    {"days": 180, "label": "6 months", "years": 0.5},
+    {"days": 365, "label": "1 year", "years": 1},
+]
 
 
 class StockService:
@@ -111,14 +118,13 @@ class StockService:
         self,
         approach: str,
         goal: str,
-        horizon: str,
         shopping_site: str,
         cart_total: float,
         ticker: str,
         past_value: float,
         today_value: float,
         percent_gain: float,
-        period_years: int
+        period_label: str
     ) -> str:
         """
         Generate personalized blurb based on approach and goal combination
@@ -126,55 +132,49 @@ class StockService:
         Args:
             approach: Investment approach (conservative, balanced, aggressive)
             goal: Financial goal (emergency, travel, future_home, long_term_wealth, other)
-            horizon: Time horizon (short, medium, long)
             shopping_site: Shopping website name
             cart_total: Cart total amount
             ticker: Stock ticker symbol
             past_value: Historical stock price
             today_value: Current stock price
             percent_gain: Percentage gain
-            period_years: Number of years in the analysis
+            period_label: Human readable period (e.g., "3 months", "1 year")
             
         Returns:
             Personalized blurb string
         """
-        # Format monetary values
-        cart_str = f"${cart_total:.2f}"
-        past_str = f"${past_value:.2f}"
-        today_str = f"${today_value:.2f}"
-        gain_str = f"+{percent_gain:.1f}%" if percent_gain > 0 else f"{percent_gain:.1f}%"
+        # Format monetary values for display
+        cart_str = f"${cart_total:,.0f}" if cart_total >= 1 else f"${cart_total:.2f}"
+        today_str = f"${today_value:,.2f}"
         
-        # Base template
-        base = f"Girl math but make it finance: your {cart_str} at {shopping_site} could've been a {ticker} moment — {period_years} years ago it was {past_str}, and today it'd be {today_str} ({gain_str} gain)"
-        
-        # Approach + Goal specific endings
-        blurb_endings = {
-            ("conservative", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this shows how steady growth builds your safety net — but remember, past returns aren't guaranteed.",
-            ("conservative", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if showing how patience pays… but actual vacations need cash, not just stocks!",
-            ("conservative", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this steady approach could've helped with that down payment — slow and steady wins the real estate race.",
-            ("conservative", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it shows how playing it safe can still build wealth over time — boring but effective!",
-            ("conservative", "other"): f". For your {approach} vibe and {horizon} horizon, it's a gentle reminder that stability and growth can coexist — just at a chill pace.",
+        # Approach + Goal specific blurbs
+        blurb_templates = {
+            ("conservative", "emergency"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — steady growth building your safety net. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("conservative", "travel"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — patience pays in the long run. Just a cute reminder for your {goal} era.",
+            ("conservative", "future_home"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — slow and steady toward that down payment. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("conservative", "long_term_wealth"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — boring but effective wealth building. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("conservative", "other"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — stability meets growth. Just a cute reminder for your financial journey.",
             
-            ("balanced", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if showing balanced growth for security — but keep some cash handy too!",
-            ("balanced", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's a cute what-if… instead of buying from {shopping_site} today, you could've been planning that dream trip with these returns.",
-            ("balanced", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this balanced approach could've gotten you closer to those house keys — not too risky, not too slow.",
-            ("balanced", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it shows the sweet spot between safety and growth — perfect for building wealth without the stress.",
-            ("balanced", "other"): f". For your {approach} vibe and {horizon} horizon, it's the Goldilocks of investing — not too safe, not too risky, just right for steady gains.",
+            ("balanced", "emergency"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — balanced growth for your safety net. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("balanced", "travel"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — that's dream trip money right there. Just a cute reminder for your {goal} era.",
+            ("balanced", "future_home"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — getting closer to those house keys. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("balanced", "long_term_wealth"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — the sweet spot between safety and growth. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("balanced", "other"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — not too safe, not too risky, just right. Just a cute reminder for your financial journey.",
             
-            ("aggressive", "emergency"): f". For your {approach} vibe and {horizon} horizon toward {goal}, this shows the power of bold moves — but emergency funds need stability, not volatility!",
-            ("aggressive", "travel"): f". For your {approach} vibe and {horizon} horizon toward {goal}, those gains could've been first-class tickets — high risk, high reward, high adventure!",
-            ("aggressive", "future_home"): f". For your {approach} vibe and {horizon} horizon toward {goal}, these bold gains could've been your down payment — but the ride might've been bumpy!",
-            ("aggressive", "long_term_wealth"): f". For your {approach} vibe and {horizon} horizon toward {goal}, it's about maximizing gains and accepting the rollercoaster — fortune favors the bold!",
-            ("aggressive", "other"): f". For your {approach} vibe and {horizon} horizon, you're playing for big wins — just remember, what goes up fast can come down faster.",
+            ("aggressive", "emergency"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — bold moves with big potential. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("aggressive", "travel"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — first-class tickets here we come. Just a cute reminder for your {goal} era.",
+            ("aggressive", "future_home"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — fast-tracking that down payment. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("aggressive", "long_term_wealth"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — a serious glow-up moment. Just a cute reminder for your {goal.replace('_', ' ')} era.",
+            ("aggressive", "other"): f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today — high risk, high reward. Just a cute reminder for your financial journey.",
         }
         
-        # Get the appropriate ending, fallback to generic if combination not found
-        ending = blurb_endings.get(
+        # Get the appropriate blurb, fallback to generic if combination not found
+        blurb = blurb_templates.get(
             (approach.lower(), goal.lower()),
-            f". For your {approach} vibe and {horizon} horizon toward {goal}, it's an interesting what-if moment!"
+            f"if your {cart_str} had gone into {ticker} {period_label} ago, it could be worth around {today_str} today. Just a cute reminder for your {goal.replace('_', ' ')} era."
         )
         
-        return base + ending
+        return blurb
     
     def get_real_time_price(self, ticker: str) -> Optional[StockQuote]:
         """
@@ -293,9 +293,17 @@ class StockService:
             
             current_price = quote.price
             
-            # Fetch historical data to get the price X years ago
+            # Fetch historical data using date range (more reliable than period)
             stock = yf.Ticker(ticker)
-            hist = stock.history(period=f"{years_ago}y")
+            end_date = datetime.now()
+            # Calculate start date by going back the specified number of years (including fractional)
+            days_back = int(years_ago * 365)
+            start_date = end_date - timedelta(days=days_back)
+            
+            # Add a few extra days buffer to ensure we get data
+            start_date = start_date - timedelta(days=5)
+            
+            hist = stock.history(start=start_date.strftime('%Y-%m-%d'), end=end_date.strftime('%Y-%m-%d'))
             
             if hist.empty or len(hist) < 2:
                 print(f"[GIRL MATH] Insufficient historical data for {ticker}")
@@ -371,23 +379,19 @@ class StockService:
     def calculate_girl_math_with_recommendation(
         self,
         item_price: float,
-        years_ago: int,
         approach: str,
         goal: str,
-        horizon: str,
         shopping_site: str,
         cart_total: float
     ) -> Optional[GirlMathRecommendationResponse]:
         """
         Calculates girl math with a randomly selected stock from the approach category
-        and generates a personalized blurb based on approach and goal.
+        and a randomly selected time period. Generates a personalized blurb based on approach and goal.
         
         Args:
             item_price: Cost of the item
-            years_ago: How many years ago you would have invested
             approach: Investment approach (conservative, balanced, aggressive)
             goal: Financial goal
-            horizon: Time horizon
             shopping_site: Shopping website name
             cart_total: Cart total amount
             
@@ -405,6 +409,12 @@ class StockService:
         # Randomly select a stock from the list
         selected_ticker = random.choice(stock_list)
         print(f"[RECOMMENDATION] Randomly selected {selected_ticker} from {approach} list: {stock_list}")
+        
+        # Randomly select a time period
+        selected_period = random.choice(TIME_PERIODS)
+        period_label = selected_period["label"]
+        years_ago = selected_period["years"]
+        print(f"[RECOMMENDATION] Randomly selected period: {period_label} ({years_ago} years)")
         
         # Calculate the girl math for this stock
         result = self.calculate_girl_math(
@@ -434,38 +444,34 @@ class StockService:
         blurb = self._generate_blurb(
             approach=approach,
             goal=goal,
-            horizon=horizon,
             shopping_site=shopping_site,
             cart_total=cart_total,
             ticker=result.ticker,
             past_value=result.historical_stock_price,
             today_value=result.current_stock_price,
             percent_gain=result.percent_gain,
-            period_years=result.years_ago
+            period_label=period_label
         )
         
         print(f"[RECOMMENDATION] Generated blurb for {approach}/{goal}: {blurb[:100]}...")
         
+        # Format the values
+        return_pct_formatted = f"+{result.percent_gain:.1f}%" if result.percent_gain > 0 else f"{result.percent_gain:.1f}%"
+        past_value_formatted = f"${item_price:,.0f}" if item_price >= 1 else f"${item_price:.2f}"
+        today_value_formatted = f"${result.current_value:,.2f}"
+        
         # Build the recommendation response
         return GirlMathRecommendationResponse(
-            main_blurb=blurb,
             ticker=result.ticker,
-            item_price=result.item_price,
-            years_ago=result.years_ago,
-            historical_stock_price=result.historical_stock_price,
-            current_stock_price=result.current_stock_price,
-            shares_bought=result.shares_bought,
-            current_value=result.current_value,
-            profit_loss=result.profit_loss,
-            percent_gain=result.percent_gain,
-            is_free=result.is_free,
-            years_until_free=result.years_until_free,
-            growth_rate_percentage=result.growth_rate_percentage,
-            approach=approach,
-            goal=goal,
-            horizon=horizon,
-            shopping_site=shopping_site,
-            timestamp=result.timestamp
+            period_label=period_label,
+            return_pct=return_pct_formatted,
+            pastValueFormatted=past_value_formatted,
+            todayValueFormatted=today_value_formatted,
+            main_blurb=blurb,
+            return_label="Return",
+            return_value=return_pct_formatted,
+            growth_label="Value Today",
+            growth_value=today_value_formatted
         )
     
     def get_esg_stocks(self) -> List[StockQuote]:

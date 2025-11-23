@@ -4,7 +4,7 @@
   "description": "Chrome extension boilerplate with Next.js, TypeScript, Tailwind CSS, and Vite",
   "type": "module",
   "scripts": {
-    "prebuild": "cp src/shared/global.css public/shared/global.css",
+    "prebuild": "node -e \"require('fs').copyFileSync('src/shared/global.css', 'public/shared/global.css')\"",
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
