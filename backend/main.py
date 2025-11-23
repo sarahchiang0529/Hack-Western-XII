@@ -6,7 +6,8 @@ from fastapi.responses import JSONResponse
 
 from app.core.config import settings
 from app.core.middleware import setup_middleware
-from app.api.routes import health, stock
+from app.api.routes import health
+from backend.app.api.routes import stockapi
 
 
 # Create FastAPI application
@@ -24,7 +25,7 @@ setup_middleware(app)
 
 # Include routers
 app.include_router(health.router)
-app.include_router(stock.router, prefix=settings.API_V1_PREFIX)
+app.include_router(stockapi.router, prefix=settings.API_V1_PREFIX)
 
 
 @app.get("/", tags=["Root"])

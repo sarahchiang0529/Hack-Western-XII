@@ -17,9 +17,7 @@ export const DEFAULTS = {
 } as const;
 
 // API endpoints (if using external APIs)
-export const API_ENDPOINTS = {
-  // Add your API endpoints here
-} as const;
+// (Removed duplicate API_ENDPOINTS declaration)
 
 // Extension-specific constants
 export const EXTENSION_CONFIG = {
@@ -28,3 +26,9 @@ export const EXTENSION_CONFIG = {
   DEBOUNCE_DELAY: 300,
 } as const;
 
+export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+
+export const API_ENDPOINTS = {
+  GIRL_MATH_RECOMMENDATION: `${API_BASE_URL}/stock/calculate_recommendation`,
+  GET_ESG_STOCKS: `${API_BASE_URL}/stock/esg`,
+} as const;
