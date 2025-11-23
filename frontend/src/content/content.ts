@@ -840,7 +840,7 @@ function createOnboardingPopup(): void {
           id="girl-math-next"
           ${!canProceedOnboarding() ? "disabled" : ""}
         >
-          ${onboardingStep === 3 ? "Complete Setup" : "Next"}
+          Next
         </button>
       </div>
     </div>
@@ -906,9 +906,64 @@ function setupOnboardingEventListeners(): void {
       onboardingStep++;
       createOnboardingPopup();
     } else {
-      saveOnboardingData();
+      // Step 3: Show completion page
+      showOnboardingCompletion();
     }
   });
+}
+
+function showOnboardingCompletion(): void {
+  if (!popupPanel) return;
+  
+  popupPanel.innerHTML = `
+    ${createPopupHeader("Onboarding", "Complete!")}
+    <div class="girl-math-popup-content">
+      <div style="text-align: center; padding: 40px 20px;">
+        <div style="font-size: 64px; margin-bottom: 16px;">✨</div>
+        <h4 class="girl-math-onboarding-title" style="margin-bottom: 16px;">
+          Onboarding Complete!
+        </h4>
+        <p class="girl-math-onboarding-subtitle" style="margin-bottom: 32px;">
+          Your profile has been saved. You're all set to start using the extension!
+        </p>
+        <button 
+          class="girl-math-nav-button girl-math-nav-button-primary" 
+          id="girl-math-complete-continue"
+          style="max-width: 200px; margin: 0 auto;"
+        >
+          Continue
+        </button>
+      </div>
+    </div>
+  `;
+  
+  setupPopupCloseButton();
+  
+  // Handle continue button
+  popupPanel
+    ?.querySelector("#girl-math-complete-continue")
+    ?.addEventListener("click", async () => {
+      // Save the onboarding data
+      chrome.storage.sync.set(
+        { girlMathProfile: onboardingData, onboardingComplete: true },
+        async () => {
+          // Check if we're on a checkout/cart page
+          if (isCheckoutPage()) {
+            // Close the onboarding popup
+            dismissPopupPanel();
+            // Wait a bit for the popup to close, then show investment popup
+            setTimeout(async () => {
+              const cartTotal = extractCartTotal() || 120;
+              log("Onboarding complete on checkout page, showing investment popup", { cartTotal });
+              await createInvestmentPopup(cartTotal, onboardingData);
+            }, 400);
+          } else {
+            // Not on checkout page, just close
+            dismissPopupPanel();
+          }
+        }
+      );
+    });
 }
 
 // ========================================

@@ -11,6 +11,7 @@
   /* Colors */
   --girl-math-green: #8F8660;
   --girl-math-green-dark: #494328;
+  --girl-math-green-light: #B8B09A;
   --girl-math-light-beige: #FAF6EE;
   --girl-math-beige: #E5DAC88A;
   --girl-math-white: #ffffff;
@@ -187,9 +188,9 @@ body {
 }
 
 .girl-math-option-button.selected {
-  background: var(--girl-math-green);
+  background: var(--girl-math-green-light);
   color: var(--girl-math-white);
-  border-color: var(--girl-math-green);
+  border-color: var(--girl-math-green-light);
 }
 
 .girl-math-option-emoji {
